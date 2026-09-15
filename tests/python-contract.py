@@ -21,6 +21,7 @@ with patch.object(VoxCPM, 'from_pretrained', return_value=ContractModel()):
     result = module['generate']('hello', 'calm', None, False, '', 2.0, True, False, 10, True, 42)
     assert sf.info(result).samplerate == 48000
     assert sf.info(result).channels == 1
+    assert sf.info(result).subtype == 'PCM_24'
     Path(result).unlink()
     interface = module['demo']
     assert len(interface.input_components) == 11

@@ -42,6 +42,9 @@ import torch
 
 from voxcpm import VoxCPM
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # sibling modules also load under runpy
+from output_files import output_dir, prune_legacy_outputs, prune_outputs  # noqa: E402
+
 # ponytail: torch auto-picks the device (CUDA if present, else CPU; MPS support depends on the
 # voxcpm build). Add a device knob here only if CPU is too slow and MPS isn't auto-selected.
 # VOXCPM_MODEL_DIR points at a pre-downloaded local copy (e.g. from ModelScope); else pull from HF.
@@ -87,6 +90,13 @@ except Exception as exc:  # noqa: BLE001 - warmup is best-effort
 # VoxCPM and the process-wide RNG are shared state. Serializing local inference prevents two
 # browser jobs from changing the seed or overwriting an output while another take is running.
 INFERENCE_LOCK = threading.Lock()
+
+# Takes are written to their own directory and pruned once Gradio has copied them into its cache.
+# At startup, clear whatever a previous run (or the old delete=False code) left behind.
+OUTPUT_DIR = output_dir()
+_swept = prune_outputs(OUTPUT_DIR, max_age_seconds=0) + prune_legacy_outputs()
+if _swept:
+    print(f"[thalika-local] removed {len(_swept)} leftover take file(s) from earlier runs.", flush=True)
 
 
 def seed_inference(seed):
@@ -179,10 +189,15 @@ def generate(
 
     # A unique file avoids cross-job collisions in Gradio's output cache. The Next.js pipeline
     # immediately downloads and converts it to the 48kHz mono 24-bit PCM master format.
-    output = tempfile.NamedTemporaryFile(prefix="thalika-output-", suffix=".wav", delete=False)
+    prune_outputs(OUTPUT_DIR)
+    output = tempfile.NamedTemporaryFile(prefix="take-", suffix=".wav", dir=OUTPUT_DIR, delete=False)
     out_path = output.name
     output.close()
-    sf.write(out_path, np.asarray(wav, dtype=np.float32), model.tts_model.sample_rate, subtype="PCM_16")
+    # 24-bit, not 16: the model renders float32, and the app masters to 24-bit with up to ~+15 dB of
+    # gain. Writing 16-bit threw that precision away first, so the 24-bit master only ever held 16
+    # bits of detail in a 1.5x larger file. (Audibly tiny - the 16-bit floor sits near -90 dBFS after
+    # typical gain - but it cost nothing to keep.)
+    sf.write(out_path, np.asarray(wav, dtype=np.float32), model.tts_model.sample_rate, subtype="PCM_24")
     return out_path
 
 
