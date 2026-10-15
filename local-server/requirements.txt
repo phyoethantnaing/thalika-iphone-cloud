@@ -1,6 +1,10 @@
-# VoxCPM2 local inference server.
-# Needs Python 3.10-3.12 (3.13+ is NOT supported by the voxcpm / torch stack).
+# Python 3.11, CUDA 12.8. Compiled transitive lock: requirements.lock.
+# torchcodec 0.7 pairs with torch 2.8; do not upgrade these independently.
 voxcpm==2.0.3
-gradio>=4.0
-soundfile
-numpy
+torch==2.8.0
+torchaudio==2.8.0
+torchcodec==0.7.0
+gradio==6.8.0
+transformers==4.57.1
+numpy==2.2.6
+soundfile==0.13.1

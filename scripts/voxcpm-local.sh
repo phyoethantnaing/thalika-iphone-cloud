@@ -49,7 +49,7 @@ source "$VENV_DIR/bin/activate"
 REQ_HASH="$(python -c 'import hashlib;print(hashlib.sha256(open("requirements.txt","rb").read()).hexdigest())')"
 REQ_STAMP="$VENV_DIR/.thalika-requirements"
 if [ ! -f "$REQ_STAMP" ] || [ "$(cat "$REQ_STAMP")" != "$REQ_HASH" ]; then
-  python -m pip install -U pip >/dev/null
+  python -m pip install pip==25.2 >/dev/null
   echo "[thalika-local] installing requirements (first run downloads torch + voxcpm; be patient)..."
   python -m pip install -r requirements.txt
   printf '%s' "$REQ_HASH" > "$REQ_STAMP"
@@ -62,7 +62,7 @@ fi
 # VOXCPM_USE_MODELSCOPE=1 to pull from the ModelScope mirror instead.
 if [ "${VOXCPM_USE_MODELSCOPE:-0}" = "1" ]; then
   echo "[thalika-local] downloading weights from ModelScope (resumable)..."
-  python -m pip install -U modelscope >/dev/null
+  python -c "import modelscope"
   MODEL_DIR="$SERVER_DIR/pretrained_models/VoxCPM2"
   python -c "from modelscope import snapshot_download; snapshot_download('OpenBMB/VoxCPM2', local_dir='$MODEL_DIR')"
   export VOXCPM_MODEL_DIR="$MODEL_DIR"

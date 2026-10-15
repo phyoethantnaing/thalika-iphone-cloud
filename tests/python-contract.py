@@ -1,4 +1,5 @@
 """Real dependency/Gradio validation with an explicitly mocked model (no weights)."""
+from pathlib import Path
 import runpy
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -20,6 +21,7 @@ with patch.object(VoxCPM, 'from_pretrained', return_value=ContractModel()):
     result = module['generate']('hello', 'calm', None, False, '', 2.0, True, False, 10, True, 42)
     assert sf.info(result).samplerate == 48000
     assert sf.info(result).channels == 1
+    Path(result).unlink()
     interface = module['demo']
     assert len(interface.input_components) == 11
     assert any(d.get('api_name') == 'generate' for d in interface.config['dependencies'])

@@ -1,0 +1,40 @@
+name: Build validated containers
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: 'Publish to GHCR (verify Actions/storage allowance first)'
+        type: boolean
+        default: false
+permissions:
+  contents: read
+jobs:
+  validate:
+    uses: ./.github/workflows/validate.yml
+  image:
+    needs: validate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        target: [control, gpu]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - name: Build and import-check
+        env:
+          TARGET: ${{ matrix.target }}
+        run: docker build --target "$TARGET" -t "thalika-$TARGET:$GITHUB_SHA" .
+      - name: Publish immutable commit tag
+        if: inputs.publish
+        env:
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET: ${{ matrix.target }}
+        run: |
+          repository="ghcr.io/${GITHUB_REPOSITORY,,}-$TARGET"
+          printf '%s' "$REGISTRY_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          docker tag "thalika-$TARGET:$GITHUB_SHA" "$repository:$GITHUB_SHA"
+          docker push "$repository:$GITHUB_SHA"
+          docker image inspect "$repository:$GITHUB_SHA" --format '{{json .RepoDigests}}' >> "$GITHUB_STEP_SUMMARY"

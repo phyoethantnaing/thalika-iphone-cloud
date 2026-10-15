@@ -16,6 +16,20 @@ The ~2B model is downloaded on first run and cached locally.
 """
 
 import os
+import json
+import time
+from pathlib import Path
+
+STARTED_AT = time.time()
+STATUS_PATH = Path(os.environ.get("THALIKA_MODEL_STATUS", "/tmp/thalika-model-status.json"))
+def startup_status(stage, **extra):
+    STATUS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    value = {"stage": stage, "startedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(STARTED_AT)), **extra}
+    temp = STATUS_PATH.with_suffix(".tmp")
+    temp.write_text(json.dumps(value))
+    temp.replace(STATUS_PATH)
+
+startup_status("Loading VoxCPM2")
 import random
 import sys
 import tempfile
@@ -52,16 +66,21 @@ try:
     )
     print(f"[thalika-local] model loaded on {model.tts_model.device}.", flush=True)
 except Exception as exc:  # noqa: BLE001 - surface a clear startup failure
+    startup_status("Error", error="Model initialization failed. Inspect private server logs.")
     print(f"[thalika-local] FATAL: could not load VoxCPM2: {exc}", file=sys.stderr, flush=True)
     raise
 
 # Warm the generate path BEFORE serving so the first real request isn't a cold take (MPS lazy
 # init / first-pass artifacts the user hears as noise on chunk 1). Output discarded.
 try:
+    startup_status("Warming Up Model")
     print("[thalika-local] warmup ...", flush=True)
     model.generate(text="warm up", cfg_value=2.0, inference_timesteps=4)
     print("[thalika-local] warmup done.", flush=True)
 except Exception as exc:  # noqa: BLE001 - warmup is best-effort
+    if os.environ.get("THALIKA_CLOUD") == "1":
+        startup_status("Error", error="Model warmup failed")
+        raise
     print(f"[thalika-local] warmup skipped: {exc}", file=sys.stderr, flush=True)
 
 
@@ -193,4 +212,5 @@ demo.queue(default_concurrency_limit=1, max_size=8)
 
 if __name__ == "__main__":
     port = int(os.environ.get("VOXCPM_PORT", "7860"))
-    demo.launch(server_name="0.0.0.0", server_port=port)
+    startup_status("Ready", readyAt=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), startupSeconds=time.time() - STARTED_AT)
+    demo.launch(server_name=os.environ.get("VOXCPM_BIND", "127.0.0.1"), server_port=port, share=False, show_error=False)

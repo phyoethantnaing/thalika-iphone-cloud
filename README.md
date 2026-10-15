@@ -1,418 +1,181 @@
-# Thalika
+# Thalika — iPhone Cloud Edition
 
-Thalika သည် Next.js, TypeScript, TailwindCSS နှင့် optional Electron desktop shell ကို အသုံးပြုထားသော local-first voice-over studio ဖြစ်သည်။
+မြန်မာစာမှ သင့်အသံဖြင့် WAV ထုတ်နိုင်သော private voice studio ဖြစ်ပါသည်။ မူရင်း **VoxCPM2 2.0.3** engine၊ Burmese normalization၊ pronunciation lexicon၊ stable seed၊ chunk quality checks နှင့် **48 kHz mono 24-bit PCM WAV** pipeline ကို ဆက်လက်အသုံးပြုထားပါသည်။ Gemini script rewrite နှင့် optional Electron shell လည်း ပါဝင်ပါသည်။
 
-Script များ၊ generation job များ၊ generated audio များနှင့် draft state ကို local `data/` folder အောက်တွင် သိမ်းဆည်းသည်။ Database မသုံးပါ။
+မူရင်း: [San Lin Htike / Thalika](https://github.com/sanlinhtik3/thalika-voice-clone) · [Apache-2.0](LICENSE) · [NOTICE](NOTICE)။ မူရင်းရေးသားသူနှင့် မသက်ဆိုင်သော ပြင်ဆင်ထားသည့် edition ဖြစ်ပါသည်။ Model weights နှင့် dependencies များ၏ သီးခြား license စည်းကမ်းများကိုလည်း လိုက်နာပါ။
 
-## လက်ရှိ ပါဝင်သော Features
+**လက်ရှိအခြေအနေ:** source code၊ owner authentication၊ iPhone/PWA interface၊ persistent jobs၊ Docker targets နှင့် Runpod lifecycle adapter တို့ ပါဝင်သည်။ စမ်းသပ်ရလဒ်နှင့် မပြီးသေးသော real-GPU / physical-iPhone checks ကို [TESTING.md](docs/TESTING.md) တွင် ဖော်ပြထားသည်။ Cloud deployment၊ GPU ငှားရမ်းခြင်းနှင့် image publication ကို အလိုအလျောက် မလုပ်ထားပါ။
 
-- Gemini API ဖြင့် script rewrite လုပ်နိုင်သော Script page
-- Script input နှင့် reference audio upload ပါသော Voice Over page
-- VoxCPM2 engine ကို အသုံးပြုသော single provider (Burmese script အတွက် pronunciation QA အလိုလို အသုံးပြုသည်)
-- Managed local VoxCPM2 inference (Apple Silicon MPS, NVIDIA CUDA သို့မဟုတ် CPU)
-- Voice reference နှင့် settings မှ stable seed ထုတ်ပြီး chunk အားလုံးတွင် တစ်ခုတည်းအသုံးပြုသော consistency control
-- Pace/loudness outlier detection၊ selective regeneration နှင့် conservative chunk loudness matching
-- Validated `48kHz` mono `24-bit PCM WAV` master output
-- Long script များအတွက် punctuation-aware chunk ခွဲခြင်းနှင့် PCM WAV merge လုပ်ခြင်း
-- Audio preview နှင့် download
-- Audio player, listening QA score နှင့် delete action ပါသော History page
-- Local consented voice profiles နှင့် editable Burmese pronunciation lexicon
-- Browser-side reference audio quality gate
-- Local storage ကို ကြည့်ရှုနိုင်ပြီး legacy compressed audio များကို PCM WAV ပြောင်းနိုင်သော Folders page
-- Optional Electron desktop shell
+## အသုံးပြုပုံ
 
-## Project Stack
+1. iPhone Safari ဖြင့် သင့် **control service** URL ကိုဖွင့်ပြီး owner password ဖြင့်ဝင်ပါ။ Control service မတပ်ဆင်ထားပါက [Runpod dashboard](https://console.runpod.io/pods) ကိုသုံးပါ။
+2. လက်ရှိ GPU စျေးနှုန်းကို Runpod တွင်စစ်ပြီး **Start GPU** နှိပ်ပါ။ GPU စျေးနှုန်းနှင့် ရရှိနိုင်မှုကို app က ကြိုတင်အာမမခံပါ။
+3. **GPU Provisioning → Loading VoxCPM2 → Warming Up Model → Ready** အထိစောင့်ပါ။ ပထမဆုံး image/weights download သည် ကြာနိုင်ပါသည်။ Model health check တကယ်အောင်မြင်မှ Ready ဖြစ်ပါသည်။
+4. **Open Studio** နှိပ်ပြီး Studio host တွင်လည်း ဝင်ပါ။ သီးခြား hostname ဖြစ်သောကြောင့် control service cookie ကို အလိုအလျောက် မမျှဝေပါ။
+5. Studio တွင် **Files / Browse / iCloud Drive** မှ WAV သို့မဟုတ် M4A reference clip ရွေးပါ။ Upload ကို browser က ဖတ်ပြီး အရည်အသွေးစစ်သည်။ Profile သိမ်းလျှင် server သို့ တင်ပို့ပြီး private persistent storage တွင်သိမ်းပါသည်။
+6. 6–30 seconds၊ တစ်ယောက်တည်းပြောသော၊ music မပါသည့် အသံကို အကြံပြုသည်။ အများဆုံး 10 MiB နှင့် 50 seconds ဖြစ်သည်။ Safari မဖတ်နိုင်သည့် format ဖြစ်ပါက WAV/M4A အဖြစ် export ပြန်လုပ်ပါ။
+7. သင့်အသံဖြစ်ကြောင်း သို့မဟုတ် အသံပိုင်ရှင်၏ ခွင့်ပြုချက်ရရှိကြောင်း အတည်ပြုပါ။ Profile သိမ်းရာနှင့် cloning ပြုလုပ်ရာတွင် consent သီးခြားလိုပါသည်။ AI output သည် မူရင်းလူ၏အသံနှင့် တစ်ထပ်တည်းဖြစ်မည်ဟု အာမမခံပါ။
+8. မြန်မာစာထည့်ပါ။ Pronunciation preview ကိုဖတ်ပြီး approve လုပ်ပါ။ လိုအပ်ပါက lexicon ပြင်ပါ။ Script ပြောင်းလျှင် approve ပြန်လုပ်ရပါမည်။
+9. **Generate Local Audio** နှိပ်ပါ။ ဤနာမည်မှ “Local” သည် GPU container အတွင်းရှိ မူရင်း VoxCPM2 service ကို ဆိုလိုသည်။ အသံကို iPhone ပေါ်တွင်တွက်ချက်ခြင်း မဟုတ်ပါ။
+10. Safari tab ပိတ်သော်လည်း GPU ဖွင့်ထားလျှင် လက်ခံထားသော job ဆက်လုပ်မည်။ **History** ကိုပြန်ဖွင့်ပြီး progress/results ကြည့်နိုင်သည်။
+11. Preview၊ seek၊ pause/resume၊ **Download WAV** သို့မဟုတ် **Share / Save to Files** ကိုသုံးပါ။ Safari Share Sheet သည် device/browser support ပေါ်မူတည်သည်။
+12. ပြီးလျှင် control service မှ **Stop GPU** နှိပ်ပြီး provider state **Stopped / EXITED** ဖြစ်ကြောင်း အတည်ပြုပါ။ Browser ပိတ်ခြင်းသည် GPU ပိတ်ခြင်း မဟုတ်ပါ။
 
-- Frontend: Next.js App Router, React, TailwindCSS
-- Backend: Next.js Route Handlers
-- Desktop shell: Electron
-- Validation: Zod
-- Storage: local Markdown, JSON, audio files
-- Local voice model: VoxCPM2 `2.0.3` ကို `local-server/` (Python + Gradio) မှတစ်ဆင့် run သည်
-- Script rewrite provider: Google Gemini API
+Bottom tabs: **Studio · Scripts · History · Voices · Settings**။ Scripts တွင် Gemini rewrite၊ saved script ပြန်ဖွင့်/ပြင်ဆင်ခြင်းနှင့် revision အသစ်သိမ်းခြင်း ပါသည်။ Voices တွင် consented references၊ Settings → Storage တွင် quota နှင့် cleanup review ရှိသည်။
 
-## ကြိုတင် လိုအပ်ချက်များ
+## iPhone Home Screen တွင် တပ်ဆင်ခြင်း
 
-- Node.js `22.12.0` သို့မဟုတ် ပိုသစ်သော version
-- npm
-- Python `3.10`–`3.12`
-- VoxCPM2 model ပထမဆုံး download နှင့် Gemini rewrite အတွက်သာ Internet connection
-- Local VoxCPM2 အတွက် 16 GB RAM နှင့် Apple Silicon MPS သို့မဟုတ် NVIDIA CUDA recommended; CPU-only run နိုင်သော်လည်း နှေးသည်
+Safari → Share → **Add to Home Screen** → Add ကိုနှိပ်ပါ။ Manifest၊ Apple touch icon နှင့် safe-area support ပါဝင်သည်။ GPU Pod ကို အသစ်ပြောင်းလျှင် proxy URL လည်းပြောင်းသဖြင့် shortcut အသစ်လိုနိုင်သည်။ တည်ငြိမ်သော control service URL ကို Home Screen တွင်သိမ်းထားခြင်းကို အကြံပြုသည်။
 
-VoxCPM2 inference ကို managed local server (`http://localhost:7860`) မှတစ်ဆင့်သာ production flow အဖြစ် run သည်။ Model cache ပြည့်ပြီးနောက် voice generation အတွက် Internet မလိုပါ။
+Offline တွင် public notice သာပြနိုင်သည်။ Private scripts/audio များကို service worker cache မလုပ်ပါ။ **GPU ပိတ်ထားချိန် သို့မဟုတ် offline တွင် AI inference မရပါ။**
 
-## Install လုပ်ခြင်း
+## တစ်ကြိမ်တည်း ပြင်ဆင်ရမည့်အရာများ
+
+လိုအပ်ချက်များ: GitHub account၊ Docker build host (အနည်းဆုံး 40–60 GB free disk အကြံပြု)၊ Runpod account၊ billing ကိုကိုယ်တိုင်ပြင်ဆင်ထားခြင်း၊ HTTPS control host ရှိလျှင် optional control service။ Source ကို clone လုပ်မည့် destination သည် သင်ပိုင် repo ဖြစ်ရမည်။ Upstream author ထံ push မလုပ်ပါနှင့်။
+
+### ၁။ Local source နှင့် owner credentials
+
+Node.js **22.22.0**၊ Python **3.11** ကို အကြံပြုသည်။
 
 ```bash
-cd /Users/zoe/Downloads/beebot/coda-voice-clone/Thalika
-npm install
+git clone https://github.com/YOUR_ACCOUNT/thalika-iphone-cloud.git
+cd thalika-iphone-cloud
+npm ci --ignore-scripts
+npm run setup:owner
 ```
 
-## Environment Variables
+`setup:owner` က `.env.local` နှင့် `.env.local.owner-password` ကို permission `0600` ဖြင့်ရေးသည်။ Password ကို terminal output မထုတ်ပါ။ Password file ကို သင့် password manager ထဲသို့ သိမ်းပါ။ Existing file ကို overwrite မလုပ်ပါ။ `.env.example` မှ optional settings များကိုသာ private file ထဲသို့ ပေါင်းထည့်ပါ။ Real credential ပါသော file မည်သည့်အရာကိုမျှ Git ထဲမတင်ပါနှင့်။
 
-Default တန်ဖိုးများကို ပြောင်းလိုပါက သို့မဟုတ် Gemini rewrite ကို အသုံးပြုလိုပါက `.env.example` ကို `.env.local` အဖြစ် copy လုပ်ပါ။
-
-```bash
-cp .env.example .env.local
-```
-
-အသုံးပြုနိုင်သော တန်ဖိုးများ:
-
-```bash
-HF_VOXCPM2_URL=http://localhost:7860
-HF_REQUEST_TIMEOUT=60000
-HF_INFERENCE_TIMEOUT=300000
-VOXCPM_DEVICE=auto
-VOXCPM_TIMESTEPS=10
-GEMINI_REQUEST_TIMEOUT=60000
-GEMINI_API_KEY=your_google_gemini_api_key_here
-```
-
-- `HF_VOXCPM2_URL`: Managed local VoxCPM2 server URL; default `http://localhost:7860`
-- `HF_REQUEST_TIMEOUT`: Local model health/upload request timeout milliseconds
-- `HF_INFERENCE_TIMEOUT`: VoxCPM2 audio segment တစ်ခု generate လုပ်ရန် စောင့်မည့် အများဆုံး milliseconds
-- `VOXCPM_DEVICE`: `auto`, `mps`, `cuda`, သို့မဟုတ် `cpu`
-- `VOXCPM_TIMESTEPS`: Diffusion sampling steps; quality/speed tradeoff
-- `GEMINI_REQUEST_TIMEOUT`: Gemini request timeout milliseconds
-- `GEMINI_API_KEY`: Script page မှ rewrite လုပ်ရာတွင် အသုံးပြုသော Gemini API key
-
-Script page ရှိ settings dialog မှတစ်ဆင့် `GEMINI_API_KEY` ကို `.env.local` ထဲသို့ သိမ်းဆည်းနိုင်သည်။
-
-## Browser တွင် Run ခြင်း
-
-Development mode:
+Local run:
 
 ```bash
 npm run dev
-```
-
-Production mode:
-
-```bash
-npm run build
-npm run start
-```
-
-Browser တွင် ဖွင့်ရန်:
-
-```text
-http://localhost:3000
-```
-
-## Electron Desktop App အဖြစ် Run ခြင်း
-
-Development desktop mode:
-
-```bash
-npm run desktop
-```
-
-Production desktop mode:
-
-```bash
-npm run build
-npm run desktop:start
-```
-
-Electron shell သည် local Next.js app ကို ဖွင့်ပေးသည်။ Backend အသစ်တစ်ခု ထပ်မံထည့်သွင်းထားခြင်း မရှိပါ။
-
-Electron shell တွင် အောက်ပါ settings များကို အသုံးပြုထားသည်။
-
-- `nodeIntegration: false`
-- `contextIsolation: true`
-- `sandbox: true`
-- `webSecurity: true`
-- single-instance lock
-
-နောက်ဆုံး Electron window ကို ပိတ်လိုက်ပါက Electron process ပိတ်သွားမည်။ `desktop:start` က local Next.js server ကို စတင်ပေးထားခြင်း ဖြစ်ပါက Electron ပိတ်သည့်အခါ launcher က ထို server ကိုပါ ရပ်ပေးမည်။
-
-Electron binary cache မပြည့်စုံပါက:
-
-```bash
-npm run repair:electron
-```
-
-## App Pages
-
-### Script
-
-ရှိပြီးသား script ကို Gemini ဖြင့် rewrite လုပ်ရန် ဤ page ကို အသုံးပြုပါ။
-
-1. Script tab ကို ဖွင့်ပါ။
-2. Original script ကို paste လုပ်ပါ။
-3. လိုအပ်ပါက title ထည့်ပါ။
-4. Gemini model ကို ရွေးပါ။
-5. `Keep Burmese language` ကို လိုအပ်သလို on သို့မဟုတ် off လုပ်ပါ။
-6. `Rewrite Narration` ကို နှိပ်ပါ။
-7. Rewritten result ကို စစ်ဆေးပြီး လိုအပ်ပါက ပြင်ဆင်ပါ။
-8. `Open Voice Over` ကို နှိပ်ပါ။
-
-Rewritten result ကို shared Voice Over draft အဖြစ် သိမ်းဆည်းသည်။
-
-App တွင် လက်ရှိ ပြသထားသော model options များ:
-
-- Gemini 2.5 Flash
-- Gemini 3.5 Flash
-- Gemini 3.1 Flash Lite
-
-ရွေးချယ်ထားသော model ကို configured Gemini API endpoint က လက်ခံနိုင်ရမည်။
-
-### Voice Over
-
-Voice Over audio generate လုပ်ရန် ဤ page ကို အသုံးပြုပါ။
-
-1. Voice Over tab ကို ဖွင့်ပါ။
-2. Script ကို paste လုပ်ပါ သို့မဟုတ် ပြင်ဆင်ပါ။
-3. လိုအပ်ပါက title ထည့်ပါ။
-4. Reference audio upload လုပ်ပါ သို့မဟုတ် သိမ်းထားသော local voice profile ကို ရွေးပါ။
-5. Browser-side reference quality report ကို စစ်ပါ။ `BLOCK` ဖြစ်နေပါက cleaner sample ပြန်တင်ပါ။
-6. Burmese script ဖြစ်ပါက pronunciation preview ကို review လုပ်ပြီး approve လုပ်ပါ။
-7. `Generate Local Audio` ကို နှိပ်ပါ။
-8. Generated audio file ကို preview လုပ်ပါ သို့မဟုတ် download လုပ်ပါ။
-
-Provider တစ်ခုတည်း (single engine):
-
-- `VoxCPM2` — Burmese script ဖြစ်ပါက Burmese pronunciation QA (normalization + lexicon + approval gate) အလိုလို အသုံးပြုသည်။ Burmese မဟုတ်သော supported multilingual scripts အတွက် raw VoxCPM2 ကို အသုံးပြုသည်။
-
-Voice Over controls များ:
-
-- Reference audio upload
-- Local voice profile selector နှင့် explicit-consent profile save
-- Reference transcript (optional — cloning အတွက် လိုအပ်ခြင်းမရှိ၊ model သို့လည်း မပို့ပါ)
-- Browser-side reference quality report
-- Burmese pronunciation lexicon
-- Advanced tuning: clone mode, clone strength, reference denoise, text normalization
-- Speed: `0.8x` မှ `1.2x`
-- Emotion: `neutral`, `calm`, `energetic`, `dramatic`
-
-VoxCPM2 model interface တွင် dedicated numeric speed parameter မရှိပါ။ Speed slider ကို pace guidance အဖြစ် control instruction ထဲတွင် အသုံးပြုသည်။
-
-Recommended reference audio သည် `6-30` seconds၊ quiet room၊ one speaker၊ music မပါသော dry voice ဖြစ်သည်။ Local voice profile ကို user က consent checkbox ဖြင့် အတည်ပြုပြီး `Save Local Profile` နှိပ်မှသာ device disk ပေါ်တွင် သိမ်းသည်။
-
-လူပြောသံတွင် natural pauses ပါနိုင်သည်။ Silence ratio မြင့်ရုံဖြင့် block မလုပ်ပါ။ Reference file သည် almost entirely silent ဖြစ်မှသာ generation ကိုတားသည်။ VoxCPM2 transcript mode က segment တစ်ခုအတွက် audio မပြန်ပေးနိုင်ပါက Thalika သည် zero-shot reference fallback ဖြင့် ဆက်လုပ်ပြီး local diagnostics တွင် မှတ်တမ်းတင်သည်။
-
-### History
-
-ဤ page တွင် အောက်ပါ လုပ်ဆောင်ချက်များကို အသုံးပြုနိုင်သည်။
-
-- သိမ်းဆည်းထားသော generation job များကို ကြည့်ရှုခြင်း
-- Generated audio ကို play လုပ်ခြင်း
-- Audio seek လုပ်ခြင်း
-- Playback speed ပြောင်းခြင်း
-- Audio download လုပ်ခြင်း
-- Audio ဖွင့်ခြင်း
-- History job ဖျက်ခြင်း
-- Speaker similarity, Burmese pronunciation, naturalness နှင့် clean audio ကို `1-5` score ပေးခြင်း
-- Generated audio ကို `approved` သို့မဟုတ် `review needed` အဖြစ်မှတ်သားခြင်း
-
-Completed job တစ်ခုကို ဖျက်လိုက်ပါက သက်ဆိုင်ရာ generated audio file ကိုပါ ဖျက်သည်။ သက်ဆိုင်ရာ saved script Markdown file ကို မဖျက်ပါ။
-
-### Folders
-
-App က စီမံထားသော local storage folders များကို ကြည့်ရှုရန် ဤ page ကို အသုံးပြုပါ။
-
-ဤ page တွင် အောက်ပါ အချက်အလက်များကို ပြသသည်။
-
-- Folder path
-- File count
-- Total size
-- Latest modification time
-- Recent files
-
-Browser mode တွင် folder path ကို copy လုပ်နိုင်သည်။ Electron mode တွင် သတ်မှတ်ထားသော app-managed folders များကို Finder သို့မဟုတ် Explorer ထဲတွင် ဖွင့်နိုင်သည်။
-
-`PCM WAV Migration` section ကို အသုံးပြုပြီး ယခင် version များမှ `.mp3` outputs နှင့် MP3 bytes ပါနေသော mislabeled `.wav` files များကို real PCM WAV masters အဖြစ် ပြောင်းနိုင်သည်။ Migration မစမီ user confirmation တောင်းသည်။ မူရင်း compressed files များကို `data/outputs/legacy-backup/` အောက်တွင် သိမ်းထားပြီး သက်ဆိုင်ရာ job Markdown metadata ကို migrated `.wav` filename ဖြင့် update လုပ်သည်။
-
-### Local VoxCPM2 Server
-
-Default inference engine သည် local server (`http://localhost:7860`) ဖြစ်သည်။ Thalika က model queue, seed, inference steps, retry, chunk selection နှင့် WAV merge ကို နောက်ကွယ်မှ စနစ်တကျ ထိန်းသည်။ အသေးစိတ်အတွက် `local-server/README.md` ကို ကြည့်ပါ။
-
-**လိုအပ်ချက်များ**
-
-- Python `3.10`, `3.11`, သို့မဟုတ် `3.12` (3.13+ ကို `voxcpm`/PyTorch stack က လက်မခံပါ)။ `python3 --version` ဖြင့် စစ်ပါ။
-- GPU ရှိလျှင် ပိုကောင်းသည် (Apple Silicon MPS, NVIDIA CUDA)။ CPU နှင့်လည်း run နိုင်သော်လည်း နှေးသည်။
-- Model (~5 GB) ကို ပထမဆုံး run တွင် download လုပ်သည်။ 16 GB RAM recommended။
-
-**Install နှင့် run လုပ်ခြင်း**
-
-repo root မှ:
-
-```bash
+# သီးခြား terminal: Python 3.10–3.12 နှင့် local GPU/CPU inference
 bash scripts/voxcpm-local.sh
 ```
 
-၎င်းသည် `.voxcpm-venv` တည်ဆောက်ပြီး `requirements.txt` install လုပ်ကာ `local-server/server.py` ကို run သည်။ Server တက်လာသည်နှင့် `http://localhost:7860` တွင် ရောက်သည်။ Python version မှားနေပါက `brew install python@3.11` (သို့) `uv` ကို အသုံးပြုပါ — အသေးစိတ်အတွက် `local-server/README.md`။
+`http://localhost:3000` တွင်ဝင်ပါ။ Cloud image သည် local launcher ကိုမသုံးသဖြင့် session တိုင်း pip install ပြန်မလုပ်ပါ။ Local desktop အတွက် `npm run desktop` ကိုဆက်သုံးနိုင်သည်။ Local GPU မရှိလျှင် inference နှေးနိုင်ပါသည်။
 
-**App ကို local server သို့ ချိတ်ခြင်း**
-
-1. App → Voice Over → Voice Settings တွင် `Start local model` ကို နှိပ်ပါ။
-2. Health badge `Local connected` ဖြစ်သည်အထိ စောင့်ပါ။
-3. Command line မှ run လိုပါက `bash scripts/voxcpm-local.sh` ကို အသုံးပြုပါ။
-
-**Quality tuning (local server တွင်သာ)**
-
-| Variable | Default | အကျိုးသက်ရောက်မှု |
-| --- | --- | --- |
-| `VOXCPM_DEVICE` | `auto` | `auto` / `cuda` / `mps` / `cpu` |
-| `VOXCPM_TIMESTEPS` | `10` | Diffusion steps။ မြင့်လျှင် ပိုကောင်းသော်လည်း နှေးသည်။ `20`–`30` စမ်းကြည့်ပါ။ |
-| `VOXCPM_PORT` | `7860` | Server port (app ၏ endpoint နှင့် ကိုက်ရမည်) |
-
-## Validation Rules
-
-Audio generation request များအတွက် အောက်ပါ rules များကို သတ်မှတ်ထားသည်။
-
-| Field | Rule |
-| --- | --- |
-| Title | Optional၊ အများဆုံး `100` characters |
-| Script | Required၊ `10` မှ `50,000` characters |
-| Provider | `voxcpm2` (single engine) |
-| Format | Final output အတွက် `wav` တစ်မျိုးတည်း |
-| Speed | `0.8` မှ `1.2` |
-| Emotion | `neutral`, `calm`, `energetic`, သို့မဟုတ် `dramatic` |
-| Clone mode | Optional: `balanced` သို့မဟုတ် `high_fidelity` |
-| Clone strength | Optional: `1.0` မှ `3.0` |
-| Reference audio | VoxCPM2 cloning အတွက် required |
-| Reference audio size | အများဆုံး `10 MB` |
-| Reference audio duration | Duration ရရှိပါက အနည်းဆုံး `3` seconds နှင့် အများဆုံး `50` seconds |
-
-## Long Scripts
-
-Script အရှည်ကို အများဆုံး `50,000` characters အထိ လက်ခံသည်။
-
-VoxCPM2 request များအတွက် script ကို default `180` characters ဝန်းကျင် punctuation-aware chunks အဖြစ် ခွဲသည်။ Local model သည် chunk တစ်ခုစီကို WAV ဖြင့်ပြန်ပေးပြီး Thalika က real `48kHz` mono `24-bit PCM WAV` အဖြစ် validate လုပ်သည်။ Voice reference၊ clone settings နှင့် emotion တူပါက stable consistency seed တစ်ခုတည်းကို chunk အားလုံးတွင် အသုံးပြုသည်။
-
-Chunk တစ်ခုစီ၏ pace နှင့် active loudness ကို accepted chunks များ၏ median နှင့်နှိုင်းသည်။ Outlier ဖြစ်မှသာ alternate deterministic take များစမ်းပြီး အနီးဆုံး take ကိုရွေးသည်။ Merge မတိုင်ခင် active RMS ကို median ဆီ အများဆုံး `±3 dB` ဖြင့် peak-safe ချိန်ညှိကာ final `RIFF/WAVE` master တစ်ခုအဖြစ် merge လုပ်သည်။
-
-| Chunk ending | Pause |
-| --- | --- |
-| `။`, `.`, `!`, `?` | `260ms` |
-| `၊`, `,`, `;`, `:` | `160ms` |
-| Explicit punctuation မရှိ | `120ms` |
-
-Long script generate လုပ်နေစဉ် chunk progress ကို သက်ဆိုင်ရာ `data/jobs/` Markdown file တွင် သိမ်းသည်။ Local inference အလွန်ကြာသွားပါက `HF_INFERENCE_TIMEOUT` ရောက်သောအခါ clean timeout ဖြစ်ပြီး retry လုပ်သည်။ Local diagnostics ကို `data/logs/generation.log` တွင် သိမ်းသည်။ ဤ log တွင် script စာသားနှင့် reference audio bytes မပါပါ။
-
-## Local Storage
-
-```text
-data/
-  scripts/              saved script Markdown files
-  jobs/                 generation job Markdown files
-  outputs/              generated PCM WAV master files
-    legacy-backup/      migration မတိုင်မီ မူရင်း compressed audio backup files
-  profiles/             consented local voice profile audio and JSON metadata
-  reviews/              local Markdown listening QA reviews
-  memory/
-    MEMORY.md           local memory notes
-    MEMORY.example.md   shareable memory note example
-    voice-over-draft.json
-    burmese-lexicon.json local pronunciation overrides
-```
-
-Script page နှင့် Voice Over page တို့သည် `data/memory/voice-over-draft.json` ကို shared draft အဖြစ် အသုံးပြုသည်။
-
-`.env.local`, generated scripts, generation jobs, audio outputs, `MEMORY.md` နှင့် draft state များကို Git ထဲသို့ မတင်ရန် `.gitignore` တွင် တားထားသည်။ Share လုပ်နိုင်သော examples များအဖြစ် `.env.example`, folder `.gitkeep` files နှင့် `data/memory/MEMORY.example.md` ကို ထည့်ထားသည်။
-
-## API Routes
-
-| Method | Route | အသုံးပြုပုံ |
-| --- | --- | --- |
-| `GET` | `/api/health` | Local service health စစ်ခြင်း |
-| `POST` | `/api/generate` | Audio generate လုပ်ခြင်း |
-| `GET` | `/api/audio/{filename}` | Generated audio file ကို stream လုပ်ခြင်း |
-| `GET` | `/api/history` | Generation jobs များကို ဖော်ပြခြင်း |
-| `DELETE` | `/api/history/{jobId}` | Generation job ဖျက်ခြင်း |
-| `PUT` | `/api/history/{jobId}/review` | Human listening QA score သိမ်းခြင်း |
-| `GET` | `/api/scripts` | Saved scripts များကို ဖော်ပြခြင်း |
-| `GET` | `/api/providers/capabilities` | Provider capability metadata ဖော်ပြခြင်း |
-| `GET` | `/api/providers/voxcpm2/health` | Managed local VoxCPM2 server ကို probe လုပ်ခြင်း |
-| `POST` | `/api/rewrite` | Gemini ဖြင့် script rewrite လုပ်ခြင်း |
-| `GET`, `POST` | `/api/settings/gemini` | Gemini API key state ဖတ်ခြင်း သို့မဟုတ် သိမ်းဆည်းခြင်း |
-| `GET`, `POST`, `DELETE` | `/api/drafts/voice-over` | Shared Voice Over draft ဖတ်ခြင်း၊ သိမ်းဆည်းခြင်း သို့မဟုတ် ဖျက်ခြင်း |
-| `POST` | `/api/burmese/normalize` | Burmese pronunciation preview ပြင်ဆင်ခြင်း |
-| `GET`, `PUT` | `/api/settings/burmese-lexicon` | Local pronunciation lexicon ဖတ်ခြင်း သို့မဟုတ် သိမ်းခြင်း |
-| `GET`, `POST` | `/api/voice-profiles` | Local voice profile များဖတ်ခြင်း သို့မဟုတ် consent ဖြင့် သိမ်းခြင်း |
-| `DELETE` | `/api/voice-profiles/{profileId}` | Local voice profile နှင့် reference audio ဖျက်ခြင်း |
-| `GET` | `/api/storage/local` | App-managed local folders များကို စစ်ဆေးခြင်း |
-| `GET`, `POST` | `/api/storage/migrate-wav` | Legacy compressed outputs ကို စစ်ဆေးခြင်း သို့မဟုတ် explicit confirmation ဖြင့် PCM WAV ပြောင်းခြင်း |
-| `GET`, `POST`, `DELETE` | `/api/voxcpm-local` | Local VoxCPM2 server status ကြည့်ခြင်း၊ start/stop လုပ်ခြင်း |
-
-## Local Filesystem Boundaries
-
-- Audio serving သည် `data/outputs/` အောက်မှသာ file ဖတ်သည်။
-- Generated filenames များကို sanitize လုပ်သည်။
-- Storage inspection တွင် သတ်မှတ်ထားသော app-managed folders များကိုသာ ဖော်ပြသည်။
-- Electron folder opening သည် သတ်မှတ်ထားသော folder IDs များကိုသာ လက်ခံသည်။
-- Provider inference သည် shell commands များကို execute မလုပ်ပါ။
-
-## VoxCPM2 Health Badge
-
-Voice Over page သည် `/api/providers/voxcpm2/health` ကို ခေါ်သည်။
-
-Badge တွင် အောက်ပါ status များ ပေါ်နိုင်သည်။
-
-- `Local connected`
-- `Local timeout`
-- `Local unavailable`
-- `Local invalid response`
-
-Health result သည် local model server ၏ လက်ရှိ state ကို ဖော်ပြသည်။ `Local connected` မဖြစ်မချင်း Generate button ကို disable လုပ်ထားသည်။
-
-## Resource Commands
-
-လက်ရှိ memory usage ကို စစ်ရန်:
-
-```bash
-npm run metrics:memory
-```
-
-CPU နှင့် RAM ကို sample ငါးကြိမ်ဖြင့် စစ်ရန်:
-
-```bash
-npm run metrics:resources
-```
-
-ဤ commands များသည် detected Thalika, Next.js, Electron နှင့် local VoxCPM2 runtime processes များကို report ပြသည်။
-
-## Verification Commands
-
-TypeScript စစ်ရန်:
+### ၂။ Production image တည်ဆောက်ခြင်း
 
 ```bash
 npm run lint
-```
-
-Production build စစ်ရန်:
-
-```bash
+npm test
 npm run build
+npx playwright install --with-deps chromium webkit
+npm run test:e2e
+
+# ကိုယ်ပိုင် registry သို့ တည်ဆောက်/တင်ပို့ရန်
+export IMAGE_REPOSITORY=ghcr.io/YOUR_ACCOUNT/thalika-iphone-cloud
+export IMAGE_TAG=release-1
+bash scripts/build-image.sh
+# registry login ကို အရင်လုံခြုံစွာလုပ်ထားပြီးမှ
+PUSH_IMAGE=1 bash scripts/build-image.sh
 ```
 
-## Troubleshooting
+Targets နှစ်ခုရှိသည်: `control` (CPU) နှင့် `gpu` (CUDA)။ Python 3.11.14၊ Torch/Torchaudio 2.8.0၊ CUDA 12.8 wheel stack၊ TorchCodec 0.7.0၊ Gradio 6.8.0၊ VoxCPM2 2.0.3 ကို pin လုပ်ထားသည်။ Transitive versions သည် `local-server/requirements.lock` တွင်ရှိသည်။ Docker build က dependency/ABI imports စစ်ပေးသည်။ CUDA 12.8 နှင့်ကိုက်ညီသော host driver ကို provider တွင်ရွေးပါ။
 
-`Generate Local Audio` button ကို နှိပ်မရပါက အောက်ပါ အချက်များကို စစ်ပါ။
+GitHub → Actions → **Build validated containers** workflow ကို ကိုယ်တိုင် run နိုင်သည်။ Publish ကို default ပိတ်ထားသည်။ GH Actions minutes၊ GHCR private storage/transfer allowance နှင့် charges ကိုစစ်ပြီးမှ publish ဖွင့်ပါ။ Tag တစ်ခုတည်းထက် build ကပြန်ပေးသော **image digest** ဖြင့် deploy လုပ်ပါ။ GHCR image private ဖြစ်ပါက Runpod ၏ Container Registry Auth တွင် `read:packages` permission သာရှိသော registry credential ကိုသိမ်းပြီး template နှင့်ချိတ်ပါ။ Public image လုပ်မည်ဆိုလျှင် ကိုယ်တိုင်ရွေးချယ်ပါ။ Real secrets သို့မဟုတ် audio/weights များ image ထဲမပါရပါ။
 
-- Script length
-- VoxCPM2 သို့မဟုတ် Burmese Production အတွက် reference audio upload
-- Reference audio file size
-- Reference audio duration
+### ၃။ Runpod account နှင့် persistent storage
 
-VoxCPM2 generation အလုပ်မလုပ်ပါက အောက်ပါ အချက်များကို စစ်ပါ။
+[Runpod](https://www.runpod.io/) တွင် account ဖွင့်ပါ။ Billing/payment ကိုကိုယ်တိုင်ပြင်ဆင်ပြီး လက်ရှိစျေးနှုန်းများကိုစစ်ပါ။ ဤ repo က balance ဖြည့်ခြင်း သို့မဟုတ် paid resources အလိုအလျောက်ဖန်တီးခြင်း မလုပ်ပါ။
 
-- Local model server running state
-- VoxCPM2 health badge
-- `HF_VOXCPM2_URL`
-- `HF_REQUEST_TIMEOUT`
-- `HF_INFERENCE_TIMEOUT`
-- `data/logs/generation.log`
+Runpod → Storage တွင် **Network Volume** တစ်ခုဖန်တီးပါ။ Models၊ user data၊ backup headroom အတွက် capacity ကိုရွေးပါ။ 30–50 GB ဖြင့်စတင်စဉ်းစားနိုင်သော်လည်း သင်သိမ်းမည့်အသံအရေအတွက်ပေါ်မူတည်သည်။
 
-Gemini rewrite အလုပ်မလုပ်ပါက အောက်ပါ အချက်များကို စစ်ပါ။
+**Network volumes သည် supported Secure Cloud data centers တွင်သာရပါသည်။** Volume location နှင့် GPU availability ကိုအတူစစ်ပါ။ RTX A5000 24GB / RTX 3090 24GB သည် compatible CUDA host ရှိလျှင် စဉ်းစားနိုင်သောရွေးချယ်စရာများသာဖြစ်သည်။ ပုံသေစျေးနှုန်းနှင့် stock ကိုအာမမခံပါ။ GPU count **1**၊ on-demand (non-spot) ကို ဦးစားပေးပါ။
 
-- `GEMINI_API_KEY`
-- `GEMINI_REQUEST_TIMEOUT`
-- Configured Gemini API က ရွေးချယ်ထားသော model ကို လက်ခံခြင်း ရှိ၊ မရှိ
+Network volume ကို **Pod ဖန်တီးချိန်** တွင်ချိတ်ရသည်။ Live Pod မှ detach လုပ်၍မရပါ။ `/workspace` တွင် mount ဖြစ်ပြီး volume disk ကိုအစားထိုးသည်။ Volume ကို အသစ်သော Pod တွင်ပြန်သုံးနိုင်သော်လည်း ယခင် Pod attachment ကို provider dashboard မှ လုံခြုံစွာပြီးဆုံးစေရန်လိုသည်။
 
-Electron binary cache မပြည့်စုံပါက:
+Persistent directories:
 
-```bash
-npm run repair:electron
+```text
+/workspace/persistent/models   HF / Torch / ModelScope caches
+/workspace/persistent/data     profiles, scripts, jobs, queue, WAV, history, lexicon
+/workspace/persistent/config   Gemini settings, preferences / separate control state
 ```
+
+အသစ်ဖန်တီးထားသည့် mount တွင် UID/GID **10001:10001** ရေးနိုင်ရန် one-time admin setup လိုနိုင်သည်။ `scripts/init-volume.sh` ကို mount ရှိသည့် host/container တွင် root administrator အဖြစ်သုံးပါ။ Existing root ကိုတွေ့ပါက script သည် ရပ်ပြီး မည်သည့် user data ကိုမျှမပြောင်းပါ။ Runpod တွင် volume permissions မကိုက်ပါက terminal/admin setup ဖြင့် အသစ်ဖြစ်သော directories များကိုသာ ပြင်ပါ။ `chmod 777` သို့မဟုတ် existing data ကို recursive chown မလုပ်ပါနှင့်။
+
+### ၄။ Secrets နှင့် Pod template
+
+Runpod secret management တွင် အောက်ပါ secret values ကို သီးခြားထည့်ပါ:
+
+- `OWNER_PASSWORD_HASH`: setup command မှ salted hash
+- `SESSION_SECRET`: setup command မှ session secret
+- `RUNTIME_TOKEN`: control ↔ GPU အတွက် အနည်းဆုံး 32 characters token
+- `GEMINI_API_KEY`: rewrite လိုမှသာ optional
+- `HF_TOKEN`: gated/private Hugging Face access လိုမှသာ optional
+
+Provider dashboard မှ template ဖန်တီးရာတွင် [template example](deploy/runpod-template.example.json) ကိုကြည့်ပါ။ Image digest ကို ကိုယ်တိုင်ဖြည့်ရမည်။ Secret names ကို သင့် Runpod secret names နှင့်ကိုက်ညီစေပါ။ Provider template secret reference syntax ကို [official docs](https://docs.runpod.io/pods/templates/secrets) နှင့်စစ်ပါ။ **RUNPOD_API_KEY ကို GPU Pod ထဲမထည့်ပါနှင့်။**
+
+Public port သည် **3000/http တစ်ခုတည်း** ဖြစ်ရမည်။ **7860 ကို မဖွင့်ပါနှင့်**။ Gradio သည် loopback only ဖြစ်သည်။ Docker image default ENTRYPOINT ကိုမပြောင်းပါနှင့်။ Node နှင့် model supervisor က prebuilt dependencies ကိုတိုက်ရိုက်သုံးသည်။ Runpod ၏ injected `RUNPOD_POD_ID` ရှိလျှင် HTTPS `APP_ORIGIN` ကို supervisor က official proxy URL အဖြစ်သတ်မှတ်ပေးသည်။ Custom domain သုံးလျှင် `APP_ORIGIN=https://...` ကိုအတိအကျထည့်ပါ။
+
+Ready ဖြစ်လာလျှင် `https://POD_ID-3000.proxy.runpod.net` ကို Safari တွင်ဖွင့်နိုင်သည်။ Model cache မရှိသေးလျှင် ပထမဆုံး download ဖြစ်မည်။ Cache ရှိပြီးသောနောက် session အသစ်တွင် software/pip install ပြန်မလုပ်ဘဲ cached weights ကိုဖတ်သည်။ Image pull၊ storage attach၊ model load၊ warmup ကြောင့် startup ကြာချိန် အပြောင်းအလဲရှိသည်။
+
+### ၅။ သီးခြား control service — optional
+
+အမြဲရရှိနိုင်သော HTTPS CPU host ရှိပါက `control` image ကို deploy လုပ်ပါ။ GPU Pod ထဲတွင်သာ control service ထားခြင်း မပြုပါနှင့်။ ထိုသို့ထားလျှင် Pod ပိတ်ပြီးနောက် ပြန်ဖွင့်မရပါ။ Existing host မရှိလျှင် အပို host လစဉ်ကုန်ကျနိုင်သည်။ ဤ project က control host ကိုသင့်အစားမဝယ်ပါ။
+
+`deploy/compose.control.yml` သည် existing host အတွက် example ဖြစ်သည်။ **Runpod Pod ထဲတွင် Docker Compose run ရန် မဟုတ်ပါ။** HTTPS reverse proxy မှ `127.0.0.1:3001` သို့ချိတ်ပါ။ Private `.env.control` တွင်:
+
+```dotenv
+THALIKA_ROLE=control
+THALIKA_CLOUD=1
+APP_ORIGIN=https://control.example.com
+THALIKA_DATA_DIR=/workspace/persistent/data
+THALIKA_CONFIG_DIR=/workspace/persistent/config
+THALIKA_INSTALLATION_ID=owner1
+IDLE_TIMEOUT_MINUTES=20
+AUTO_STOP_ENABLED=0
+SESSION_BUDGET_USD=2
+ALLOW_GPU_PROVISIONING=0
+```
+
+အောက်ပါ credentials/IDs ကို private environment မှထည့်ပါ: `OWNER_PASSWORD_HASH`, `SESSION_SECRET`, `RUNTIME_TOKEN`, `RUNPOD_API_KEY`, `RUNPOD_POD_ID` (existing managed Pod ရှိလျှင်), `RUNPOD_TEMPLATE_ID`, `RUNPOD_NETWORK_VOLUME_ID`, `RUNPOD_DATA_CENTER_ID`။ Studio နှင့် controller တို့၏ RUNTIME_TOKEN တူရမည်။ Controller disk သည် GPU volume နှင့် သီးခြားဖြစ်ရမည်။
+
+Default အနေဖြင့် provisioning မဖွင့်ထားပါ။ ငွေကုန်ကျမှုကိုသဘောတူပြီး GPU template၊ volume နှင့် data center စစ်ပြီးမှ `ALLOW_GPU_PROVISIONING=1` လုပ်ပါ။ **Start GPU** သည် matching existing Pod ရှိပါက resume၊ မရှိမှသာ create လုပ်သည်။ Provider request မသေချာပါက ထပ်မဖန်တီးဘဲ reconciliation လိုကြောင်းပြသည်။
+
+Zero-additional-control-host fallback: Safari မှ [Runpod dashboard](https://console.runpod.io/pods) တွင် Start / Stop ကိုသုံးပါ။ Storage နှင့် provider ကိုယ်တိုင်၏ charges များ ဆက်ရှိနိုင်သည်။
+
+## နောက်တစ်ကြိမ် GPU သုံးရာတွင်
+
+1. Control service သို့မဟုတ် Runpod dashboard ဖွင့်ပါ။
+2. Existing Pod ကို Start / Resume လုပ်ပါ။ GPU ပြန်ရမည်ဟု အာမမခံပါ။
+3. Readiness အောင်မြင်သည်အထိစောင့်ပြီး Open Studio နှိပ်ပါ။
+4. Saved voices၊ scripts၊ history နှင့် model cache အားလုံး တူညီသော persistent mount မှပြန်ပေါ်လာမည်။
+5. Session ပြီးလျှင် active jobs ပြီးဆုံးမှ Stop လုပ်ပါ။
+
+GPU မရလျှင် [recovery guide](docs/OPERATIONS.my.md) ကိုလိုက်နာပါ။ Network volume ကိုမဖျက်ပါနှင့်။
+
+## ကုန်ကျစရိတ်ကို ကာကွယ်ခြင်း
+
+Dashboard သည် real provider Pod rate နှင့် session time မှ estimate တွက်သည်။ စျေးနှုန်းမရလျှင် **Unavailable** ပြသည်။ GPU utilization/VRAM မရပါက အတုမပြပါ။ Provider invoice သာ အတည်ဖြစ်သည်။ အောက်ပါအမျိုးအစားများကို သီးခြားစဉ်းစားပါ:
+
+| အမျိုးအစား | ပိတ်ပြီးနောက် |
+| --- | --- |
+| GPU compute / Pod running rate | Stop state ကို provider တွင် verify လုပ်ပါ |
+| Network volume storage | Pod ပိတ်/terminate လုပ်သော်လည်း ဆက်ကုန်နိုင်သည် |
+| Pod volume disk | Stopped အခြေအနေတွင်လည်း သီးခြားစျေးဖြင့်ကုန်နိုင်သည် |
+| Container disk / transfer / gateway | Provider policy နှင့် usage ပေါ်မူတည်သည် |
+| Control host / HTTPS / domain | သင့်ရွေးချယ်ထားသော host ပေါ်မူတည်သည် |
+| GH Actions / registry storage / transfer | သင့် account allowance ပေါ်မူတည်သည် |
+| Gemini rewrite | API plan/usage ပေါ်မူတည်သည် |
+
+Idle warning default သည် 20 minutes ဖြစ်သည်။ Safe automatic stop ကိုလိုမှ controller တွင် `AUTO_STOP_ENABLED=1` လုပ်ပါ။ Active jobs ရှိလျှင် မပိတ်ပါ။ Runtime/model readiness ကိုမသိနိုင်လျှင် အလိုအလျောက်မပိတ်သဖြင့် failed startup compute ကို dashboard မှကိုယ်တိုင်စစ်ပြီးပိတ်ရသည်။ Notification သည် app အတွင်းဖြစ်သည်; iOS background push alarm အာမမခံပါ။ Budget warning သည် hard spending cap မဟုတ်ပါ။
+
+Storage balance မရှိတော့လျှင် provider က data ကိုနောက်ဆုံးဖျက်နိုင်သဖြင့် balance notifications နှင့် off-provider backup ကို ကိုယ်တိုင်ပြင်ဆင်ပါ။ **Stopped GPU သည် အားလုံးအခမဲ့ဖြစ်သွားခြင်း မဟုတ်ပါ။**
+
+## Backup၊ update နှင့် recovery
+
+[အသေးစိတ် Myanmar လမ်းညွှန်](docs/OPERATIONS.my.md) တွင်:
+
+- no-GPU replacement နှင့် network volume ပြန်သုံးခြင်း
+- stopped/resumed/terminated/new Pod ကွာခြားချက်
+- stalled startup နှင့် stale control lock recovery
+- backup verification နှင့် empty-directory restoration
+- immutable image update နှင့် rollback
+- operator CLI lifecycle/readiness scripts
+- GitHub push မရလျှင် local Git bundle မှဆက်လုပ်ရန်
+
+[Architecture](docs/ARCHITECTURE.md)၊ [Upstream audit](docs/AUDIT.md)၊ [Testing](docs/TESTING.md) နှင့် [Original README](docs/UPSTREAM_README.md) ကိုလည်းကြည့်နိုင်သည်။
