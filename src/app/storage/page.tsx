@@ -1,4 +1,5 @@
 "use client";
+import { StorageQuota } from "@/components/StorageQuota";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArchiveRestore, CheckCircle2, Copy, ExternalLink, FileAudio2, FileText, FolderOpen, HardDrive, RefreshCcw } from "lucide-react";
@@ -202,6 +203,7 @@ export default function StoragePage() {
       description="Review the app-managed local folders for scripts, jobs, audio outputs, and memory without exposing arbitrary files."
       aside={heroAside}
     >
+      <StorageQuota />
       <section className="studio-card-bg mb-5 rounded-[2.2rem] border border-white/10 p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex items-start gap-3">

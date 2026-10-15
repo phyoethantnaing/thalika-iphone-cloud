@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 import { Sparkles } from "lucide-react";
-import { AppHeader } from "./AppHeader";
+import { AppHeader, type AppTab } from "./AppHeader";
 
 interface StudioPageShellProps {
-  activeTab: "script" | "voiceover" | "history" | "storage";
+  activeTab: AppTab;
   badge: string;
   title: string;
   description: string;
@@ -13,7 +13,7 @@ interface StudioPageShellProps {
 
 export function StudioPageShell({ activeTab, badge, title, description, aside, children }: StudioPageShellProps) {
   return (
-    <main className="mx-auto min-h-screen w-full min-w-0 max-w-[1400px] px-3 py-4 sm:px-5 lg:px-8">
+    <main className="page-shell mx-auto min-h-screen w-full min-w-0 max-w-[1400px] px-3 py-4 sm:px-5 lg:px-8">
       <header className="grid gap-6">
         <AppHeader activeTab={activeTab} />
 

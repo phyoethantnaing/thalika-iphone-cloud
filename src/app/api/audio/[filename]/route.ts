@@ -58,7 +58,7 @@ export async function GET(request: Request, context: { params: Promise<{ filenam
     const headers: Record<string, string> = {
       "Accept-Ranges": "bytes",
       "Content-Type": contentType,
-      "Content-Disposition": `inline; filename="${filename}"`,
+      "Content-Disposition": `${new URL(request.url).searchParams.get("download") === "1" ? "attachment" : "inline"}; filename="${filename}"`,
       "Content-Length": String(range ? range.end - range.start + 1 : size),
       "Cache-Control": "no-store"
     };

@@ -90,7 +90,7 @@ async function probeJson(baseUrl: string, endpoint: string) {
     method: "GET",
     headers: { Accept: "application/json" },
     cache: "no-store"
-  });
+  }, Math.min(getHFRequestTimeout(), 3000));
   const latencyMs = Date.now() - startedAt;
 
   if (response.status === 429) {

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FileText, UploadCloud, WandSparkles } from "lucide-react";
+import { JobRecovery } from "@/components/JobRecovery";
 import { AudioPreview } from "@/components/AudioPreview";
 import { GenerateButton } from "@/components/GenerateButton";
 import { ScriptInput } from "@/components/ScriptInput";
@@ -37,6 +38,9 @@ interface VoiceOverDraft {
 }
 
 export default function Home() {
+  const [voiceConsent, setVoiceConsent] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const submissionKey = useRef<string | undefined>(undefined);
   const [title, setTitle] = useState("");
   const [script, setScript] = useState("");
   const [provider] = useState<VoiceProvider>("voxcpm2");
@@ -71,6 +75,19 @@ export default function Home() {
   const [draftReady, setDraftReady] = useState(false);
   const loadedDraftRef = useRef(false);
 
+  const [preferencesReady, setPreferencesReady] = useState(false);
+  useEffect(() => {
+    void fetch("/api/settings/preferences").then(r => r.ok ? r.json() : null).then(data => {
+      const p = data?.preferences;
+      if (p) { setSpeed(p.speed); setEmotion(p.emotion); setCloneMode(p.cloneMode); setCloneStrength(p.cloneStrength); setInferenceTimesteps(p.inferenceTimesteps); setDenoiseReference(p.denoiseReference); setNormalizeText(p.normalizeText); }
+    }).catch(() => undefined).finally(() => setPreferencesReady(true));
+  }, []);
+  useEffect(() => {
+    if (!preferencesReady) return;
+    const timer = setTimeout(() => { void fetch("/api/settings/preferences", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ speed, emotion, cloneMode, cloneStrength, inferenceTimesteps, denoiseReference, normalizeText }) }); }, 700);
+    return () => clearTimeout(timer);
+  }, [preferencesReady, speed, emotion, cloneMode, cloneStrength, inferenceTimesteps, denoiseReference, normalizeText]);
+
   // Burmese scripts automatically get the production QA layer (pronunciation normalization +
   // approval gate). The trigger is the detected language, not a separate provider selection.
   const isBurmeseScript = useMemo(() => detectScriptLanguage(script).code === "my", [script]);
@@ -100,6 +117,9 @@ export default function Home() {
     if (!response.ok) return;
     const data = (await response.json()) as { profiles: VoiceProfileSummary[] };
     setProfiles(data.profiles);
+    const chosen = new URLSearchParams(location.search).get("voice");
+    const profile = data.profiles.find(p => p.id === chosen);
+    if (profile) { setSelectedProfileId(profile.id); setReferenceText(profile.referenceText); setReferenceQualityReport(profile.qualityReport); }
   }, []);
 
   useEffect(() => {
@@ -180,6 +200,8 @@ export default function Home() {
 
   useEffect(() => {
     void refreshProviderHealth();
+    const timer = setInterval(() => void refreshProviderHealth(), 15000);
+    return () => clearInterval(timer);
   }, [refreshProviderHealth]);
 
   const scriptError = useMemo(() => {
@@ -198,7 +220,10 @@ export default function Home() {
     setReferenceAudioError("");
 
     if (!file) return;
-    if (!file.type.startsWith("audio/")) {
+    const extension = file.name.split(".").pop()?.toLowerCase();
+    const inferred = ({ wav: "audio/wav", mp3: "audio/mpeg", m4a: "audio/mp4", flac: "audio/flac", ogg: "audio/ogg" } as Record<string,string>)[extension || ""];
+    const mime = file.type.startsWith("audio/") ? file.type : inferred;
+    if (!mime) {
       setReferenceAudioError("Reference audio must be an audio file.");
       return;
     }
@@ -207,30 +232,33 @@ export default function Home() {
       return;
     }
 
+    setUploading(true);
     try {
       const report = await analyzeReferenceAudio(file);
+      if (!report.durationSeconds) throw new Error("Safari could not decode this format. Export a WAV or M4A clip from Files and try again.");
 
       const dataUrl = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(String(reader.result));
         reader.onerror = () => reject(new Error("Could not read reference audio."));
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(new Blob([file], { type: mime }));
       });
       setReferenceAudio({
         dataUrl,
         filename: file.name,
-        mimeType: file.type,
+        mimeType: mime,
         size: file.size,
         durationSeconds: report.durationSeconds
       });
       setReferenceQualityReport(report);
     } catch (caught) {
       setReferenceAudioError(caught instanceof Error ? caught.message : "Could not read reference audio.");
-    }
+    } finally { setUploading(false); }
   }
 
   function selectProfile(id: string) {
     setSelectedProfileId(id);
+    setVoiceConsent(false);
     setReferenceAudio(undefined);
     setReferenceAudioError("");
     const profile = profiles.find((item) => item.id === id);
@@ -297,6 +325,7 @@ export default function Home() {
       setStatus("failed");
       return;
     }
+    if (status === "saving" || status === "generating") return;
     setStatus("saving");
     setError("");
     setAudioResult(undefined);
@@ -305,8 +334,9 @@ export default function Home() {
     try {
       const response = await fetch("/api/generate", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "Idempotency-Key": submissionKey.current ||= crypto.randomUUID() },
         body: JSON.stringify({
+          voiceConsent,
           title,
           script,
           provider,
@@ -330,6 +360,7 @@ export default function Home() {
       });
       const data = await response.json();
 
+      if (response.status < 500) submissionKey.current = undefined;
       if (!response.ok || data.status === "failed" || !data.jobId) {
         throw new Error(data.message || data.error || "Generation failed");
       }
@@ -409,6 +440,7 @@ export default function Home() {
   const generateDisabled =
     Boolean(scriptError) ||
     isGenerating ||
+    (!isDesign && !voiceConsent) ||
     !localEngineReady ||
     Boolean(referenceRequirementError) ||
     (isBurmeseScript && (referenceQualityReport?.status === "block" || !normalizationApproved));
@@ -462,13 +494,14 @@ export default function Home() {
   return (
     <StudioPageShell
       activeTab="voiceover"
-      badge="Local-first voice cloning"
-      title="Voice Over"
-      description="Paste Burmese script, add a clean voice reference, generate audio, then review everything locally."
+      badge="Private voice studio"
+      title="Voice Studio"
+      description="အသံနမူနာရွေးပါ။ မြန်မာစာထည့်ပါ။ သင့်အသံဖြင့် ဖန်တီးပါ။"
       aside={heroAside}
     >
-        <div className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
-          <div className="grid gap-5">
+        <JobRecovery />
+        <div className="studio-workflow mt-6 grid gap-5">
+          <div className="script-step grid content-start gap-5">
             <ScriptInput
               title={title}
               script={script}
@@ -481,7 +514,7 @@ export default function Home() {
             )}
           </div>
 
-          <aside className="grid content-start gap-5">
+          <section className="reference-step grid content-start gap-5">
             <VoiceSettings
               provider={provider}
               voiceMode={voiceMode}
@@ -518,6 +551,12 @@ export default function Home() {
               onLexiconSaved={() => void refreshNormalization()}
               onRefreshProviderHealth={refreshProviderHealth}
             />
+            {uploading && <p role="status" className="notice">Reading from Files and checking audio quality…</p>}
+            {referenceAudio && <audio controls preload="metadata" src={referenceAudio.dataUrl} aria-label="Reference preview" />}
+            {selectedProfileId && <audio controls preload="none" src={`/api/voice-profiles/${selectedProfileId}/audio`} aria-label="Saved voice preview" />}
+          </section>
+          <aside className="result-step grid content-start gap-5">
+            {!isDesign && <label className="studio-card-bg panel text-sm"><span className="flex items-start gap-3"><input type="checkbox" checked={voiceConsent} onChange={e => setVoiceConsent(e.target.checked)} className="mt-1 h-5 w-5 shrink-0"/><span>I own this voice or have the speaker’s permission to clone it. AI output may differ from the original voice.</span></span></label>}
             <GenerateButton
               disabled={generateDisabled || capabilityDisabled}
               loading={isGenerating}

@@ -23,6 +23,7 @@ const referenceQualitySchema = z.object({
 
 export const generateRequestSchema = z
   .object({
+    voiceConsent: z.boolean().optional(),
     title: z.string().trim().max(100, "Title must be 100 characters or fewer").optional().or(z.literal("")),
     script: z
       .string()
@@ -48,6 +49,9 @@ export const generateRequestSchema = z
     normalizationApproved: z.boolean().optional()
   })
   .superRefine((value, context) => {
+    if ((value.referenceAudio || value.voiceProfileId) && value.voiceConsent !== true) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ["voiceConsent"], message: "Confirm that you own this voice or have permission to clone it" });
+    }
     // Burmese scripts get the production QA layer (normalization approval + reference-quality
     // gate) automatically — the trigger is the detected language, not a separate provider.
     const isBurmeseScript = detectScriptLanguage(value.script).code === "my";

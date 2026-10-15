@@ -81,3 +81,16 @@ venv/
 .venv/
 env/
 *.egg-info/
+
+# Cloud persistent state, private credentials, and test artifacts
+persistent/
+backups/
+*.owner-password
+playwright-report/
+test-results/
+data/queue/
+data/config/
+data/*.json
+data/*.lock
+**/__pycache__/
+**/*.pyc

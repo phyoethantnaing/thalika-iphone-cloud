@@ -1,3 +1,5 @@
+import { assertStorageAvailable } from "../cloud/storage";
+import { validateAudioPayload, audioExtension } from "../security/audio-upload";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { ensureDataDirs, idStamp, localIsoString, profilesDir, safeJoin, sanitizeFilename } from "../file-utils";
@@ -16,9 +18,7 @@ function assertProfileId(id: string) {
 }
 
 function decodeAudio(referenceAudio: ReferenceAudioPayload) {
-  const match = referenceAudio.dataUrl.match(/^data:(audio\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
-  if (!match) throw new Error("Voice profile requires a valid audio file");
-  return Buffer.from(match[2], "base64");
+  return validateAudioPayload(referenceAudio);
 }
 
 function publicProfile(profile: VoiceProfileRecord): VoiceProfileSummary {
@@ -39,9 +39,11 @@ export async function createVoiceProfile(input: {
 }) {
   if (!input.consent) throw new Error("Consent is required before saving a local voice profile");
   if (input.qualityReport.status === "block") throw new Error("Blocked reference audio cannot be saved as a voice profile");
+  await assertStorageAvailable(input.referenceAudio.size);
   await ensureDataDirs();
   const id = `profile_${idStamp()}`;
-  const extension = path.extname(input.referenceAudio.filename).toLowerCase() || ".audio";
+  const audioBytes = decodeAudio(input.referenceAudio);
+  const extension = audioExtension(audioBytes);
   const audioFile = `${id}${sanitizeFilename(extension)}`;
   const createdAt = localIsoString();
   const profile: VoiceProfileRecord = {
@@ -59,7 +61,7 @@ export async function createVoiceProfile(input: {
     preferredNormalizeText: input.preferredNormalizeText ?? true,
     createdAt
   };
-  await fs.writeFile(safeJoin(profilesDir, audioFile), decodeAudio(input.referenceAudio));
+  await fs.writeFile(safeJoin(profilesDir, audioFile), audioBytes);
   await fs.writeFile(profileMetadataPath(id), `${JSON.stringify(profile, null, 2)}\n`, "utf8");
   return publicProfile(profile);
 }
@@ -91,7 +93,7 @@ export async function getVoiceProfile(id: string) {
   const profile = JSON.parse(await fs.readFile(profileMetadataPath(id), "utf8")) as VoiceProfileRecord;
   const audio = await fs.readFile(safeJoin(profilesDir, profile.referenceAudioFile));
   const extension = path.extname(profile.referenceAudioFile).toLowerCase();
-  const mimeType = extension === ".mp3" ? "audio/mpeg" : extension === ".m4a" ? "audio/mp4" : "audio/wav";
+  const mimeType = ({ ".mp3": "audio/mpeg", ".m4a": "audio/mp4", ".flac": "audio/flac", ".ogg": "audio/ogg" } as Record<string,string>)[extension] || "audio/wav";
   return {
     profile: publicProfile(profile),
     referenceAudio: {

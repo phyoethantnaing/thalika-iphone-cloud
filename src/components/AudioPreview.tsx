@@ -24,20 +24,28 @@ export function AudioPreview({ result }: AudioPreviewProps) {
       </div>
       {result ? (
         <div className="mt-4 grid gap-4">
-          <audio controls src={result.audioUrl} />
+          <audio controls preload="metadata" src={result.audioUrl} />
           <div className="grid gap-1 text-sm text-studio-muted">
             <span className="break-all text-studio-text">{result.filename}</span>
             <span>Provider: {result.provider}</span>
             <span>Created: {result.createdAt}</span>
           </div>
           <a
-            href={result.audioUrl}
+            href={`${result.audioUrl}?download=1`}
             download={result.filename}
             className="studio-soft-chip-bg inline-flex items-center justify-center gap-2 rounded-[1.5rem] border border-white/10 px-4 py-3 text-sm font-semibold text-studio-text transition hover:border-studio-accent"
           >
             <Download size={17} />
             Download Audio
           </a>
+          <button type="button" className="secondary" onClick={async () => {
+            try {
+              const response = await fetch(result.audioUrl); if (!response.ok) throw new Error("Download failed");
+              const file = new File([await response.blob()], result.filename, { type: "audio/wav" });
+              if (navigator.canShare?.({ files: [file] })) await navigator.share({ files: [file] });
+              else window.open(`${result.audioUrl}?download=1`, "_blank", "noopener");
+            } catch (error) { if ((error as Error).name !== "AbortError") alert("Use Download WAV, then Safari Share → Save to Files."); }
+          }}>Share / Save to Files</button>
         </div>
       ) : (
         <p className="mt-3 text-sm text-studio-muted">No audio generated yet.</p>

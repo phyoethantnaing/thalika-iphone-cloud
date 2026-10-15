@@ -109,6 +109,7 @@ export interface ListeningReview {
 }
 
 export interface GenerateVoiceRequest {
+  voiceConsent?: boolean;
   title?: string;
   script: string;
   provider: VoiceProvider;

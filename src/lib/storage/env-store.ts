@@ -1,7 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { configDir } from "../file-utils";
 
-const envLocalPath = path.join(process.cwd(), ".env.local");
+const envLocalPath = path.join(configDir, "settings.env");
 
 function parseEnvValue(line: string) {
   const separatorIndex = line.indexOf("=");
@@ -39,6 +40,8 @@ export async function readEnvKey(key: string) {
 }
 
 export async function writeEnvKey(key: string, value: string) {
+  if (!["GEMINI_API_KEY", "HF_VOXCPM2_URL"].includes(key)) throw new Error("Setting is not writable");
+  await fs.mkdir(configDir, { recursive: true, mode: 0o700 });
   const safeValue = serializeEnvValue(value);
   const content = await readEnvLocal();
   const lines = content ? content.split(/\r?\n/) : [];
@@ -54,7 +57,7 @@ export async function writeEnvKey(key: string, value: string) {
 
   const nextContent = `${lines.join("\n").replace(/\n*$/g, "")}\n`;
   const temporaryPath = `${envLocalPath}.tmp`;
-  await fs.writeFile(temporaryPath, nextContent, "utf8");
+  await fs.writeFile(temporaryPath, nextContent, { encoding: "utf8", mode: 0o600 });
   await fs.rename(temporaryPath, envLocalPath);
   return safeValue;
 }

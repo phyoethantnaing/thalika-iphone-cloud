@@ -46,7 +46,7 @@ export async function GET() {
   const pid = await readPid();
   const configured = await fs.access(launcherPath).then(() => true).catch(() => false);
   return NextResponse.json({
-    configured,
+    configured: process.env.THALIKA_CLOUD === "1" ? false : configured,
     running: pid ? isAlive(pid) : false,
     reachable: await reachable()
   });

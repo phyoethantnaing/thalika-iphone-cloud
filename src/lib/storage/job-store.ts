@@ -1,5 +1,7 @@
+import { writeJson } from "../cloud/files";
+import path from "node:path";
 import fs from "node:fs/promises";
-import { ensureDataDirs, idStamp, localIsoString, readMarkdownFiles, safeJoin, jobsDir, outputsDir } from "../file-utils";
+import { ensureDataDirs, idStamp, localIsoString, readMarkdownFiles, safeJoin, jobsDir, outputsDir, dataDir } from "../file-utils";
 import { parseMarkdown, serializeMarkdown, toNumber } from "../markdown-utils";
 import type { JobRecord, OutputFormat, VoiceEmotion } from "../types";
 import { deleteListeningReview, readListeningReview } from "./listening-review-store";
@@ -40,7 +42,10 @@ export async function saveJob(record: Omit<JobRecord, "createdAt"> & { createdAt
     job.content
   );
 
-  await fs.writeFile(safeJoin(jobsDir, `${job.id}.md`), markdown, "utf8");
+  const target = safeJoin(jobsDir, `${job.id}.md`);
+  const temporary = `${target}.${crypto.randomUUID()}.tmp`;
+  await fs.writeFile(temporary, markdown, { encoding: "utf8", mode: 0o600 });
+  await fs.rename(temporary, target);
   return job;
 }
 
@@ -100,6 +105,7 @@ export async function deleteJob(jobId: string) {
     throw new Error("Invalid job id");
   }
 
+  if ((await getJob(jobId))?.status === "generating") throw new Error("Cancel the active job before deleting it");
   const jobFilePath = safeJoin(jobsDir, `${jobId}.md`);
   const markdown = await fs.readFile(jobFilePath, "utf8");
   const parsed = parseMarkdown(markdown);
@@ -130,6 +136,16 @@ export async function deleteJob(jobId: string) {
     }
   };
 
+  const spoolDirectory = path.join(dataDir, "queue");
+  for (const file of await fs.readdir(spoolDirectory).catch(() => [] as string[])) {
+    if (!/^[a-f0-9-]+\.json$/.test(file)) continue;
+    const location = safeJoin(spoolDirectory, file);
+    try {
+      const task = JSON.parse(await fs.readFile(location, "utf8"));
+      if (task?.context?.baseJob?.id === jobId) await writeJson(location, { key: task.key, digest: task.digest, state: "done", deleted: true, result: { jobId }, context: { baseJob: { id: jobId } } });
+    } catch { /* unrelated corrupt spool is preserved for operator review */ }
+  }
+  await fs.unlink(safeJoin(spoolDirectory, `${jobId}.cancel`)).catch(() => undefined);
   const audioDeleted = await deleteOutput(audioFile);
   await deleteOutput(rawAudioFile);
 

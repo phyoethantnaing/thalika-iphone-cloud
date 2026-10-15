@@ -3,7 +3,8 @@ import fs from "node:fs/promises";
 
 // Local user data is runtime state, not a build input. Avoid tracing the entire checkout into
 // the production bundle while keeping every filesystem route scoped to this one directory.
-export const dataDir = path.join(/*turbopackIgnore: true*/ process.cwd(), "data");
+export const dataDir = process.env.THALIKA_DATA_DIR || path.join(/*turbopackIgnore: true*/ process.cwd(), "data");
+export const configDir = process.env.THALIKA_CONFIG_DIR || path.join(dataDir, "config");
 export const scriptsDir = path.join(dataDir, "scripts");
 export const jobsDir = path.join(dataDir, "jobs");
 export const outputsDir = path.join(dataDir, "outputs");

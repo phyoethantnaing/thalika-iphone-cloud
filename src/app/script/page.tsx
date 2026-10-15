@@ -1,4 +1,5 @@
 "use client";
+import { ScriptLibrary } from "@/components/ScriptLibrary";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -223,6 +224,7 @@ export default function ScriptPage() {
       description="Polish the original script with natural pauses, emphasis, and spoken pacing, then use the same script in Voice Over."
       aside={heroAside}
     >
+      <ScriptLibrary />
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
         <section className="studio-card-bg rounded-[2.2rem] border border-white/10 p-5">
           <div className="mb-4 flex items-end justify-between gap-4">

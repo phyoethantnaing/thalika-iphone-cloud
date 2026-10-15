@@ -1,3 +1,4 @@
+import { SubmissionConflict } from "@/lib/services/job-queue";
 import { NextResponse } from "next/server";
 import { formatValidationError, generateRequestSchema } from "@/lib/validators";
 import { RemoteProviderError } from "@/lib/providers/hf-utils";
@@ -6,6 +7,8 @@ import { startVoiceGeneration, ProviderPreflightError } from "@/lib/services/gen
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
+  const key = request.headers.get("idempotency-key") || "";
+  if (!/^[a-f0-9-]{36}$/.test(key)) return NextResponse.json({ error: "A UUID Idempotency-Key is required" }, { status: 400 });
   let parsed;
 
   try {
@@ -22,8 +25,9 @@ export async function POST(request: Request) {
   try {
     // Returns immediately with the jobId; generation runs in the background and the client
     // polls GET /api/history/[jobId] for live progress and the final audio.
-    return NextResponse.json(await startVoiceGeneration(parsed.data), { status: 202 });
+    return NextResponse.json(await startVoiceGeneration(parsed.data, key), { status: 202 });
   } catch (error) {
+    if (error instanceof SubmissionConflict) return NextResponse.json({ error: error.message }, { status: 409 });
     if (error instanceof ProviderPreflightError) {
       return NextResponse.json(
         {

@@ -309,7 +309,7 @@ export function VoiceSettings({
                   : ""}
               </p>
               <div className="studio-control-bg flex items-center justify-between gap-3 rounded-2xl border border-white/10 px-3 py-2 text-xs">
-                <span className="font-medium text-studio-text">Managed local engine</span>
+                <span className="font-medium text-studio-text">VoxCPM2 engine</span>
                 <code className="text-studio-muted">{endpoint || "http://localhost:7860"}</code>
               </div>
               {localStatus.configured && (
@@ -372,7 +372,7 @@ export function VoiceSettings({
               <span className="inline-flex items-center gap-2"><UploadCloud size={15} /> Reference audio</span>
               <input
                 type="file"
-                accept="audio/*"
+                accept="audio/*,.wav,.mp3,.m4a,.flac,.ogg"
                 onChange={(event) => onReferenceAudioChange(event.target.files?.[0] || null)}
                 className="studio-control-bg block w-full rounded-2xl border border-white/10 px-3 py-3 text-sm text-studio-text file:mr-3 file:rounded-xl file:border-0 file:bg-studio-accent file:px-3 file:py-2 file:text-sm file:font-semibold file:text-slate-950"
               />
@@ -410,13 +410,13 @@ export function VoiceSettings({
 
             {referenceAudio && !selectedProfileId && (
               <div className="grid gap-2">
-                <input value={profileName} onChange={(event) => setProfileName(event.target.value)} placeholder="Optional local profile name" className="rounded-xl border border-studio-border bg-white/60 px-3 py-2 text-sm text-studio-text outline-none" />
+                <input value={profileName} onChange={(event) => setProfileName(event.target.value)} placeholder="Voice profile name" className="rounded-xl border border-studio-border bg-white/60 px-3 py-2 text-sm text-studio-text outline-none" />
                 <label className="flex items-start gap-2 text-xs leading-5 text-studio-muted">
                   <input type="checkbox" checked={profileConsent} onChange={(event) => setProfileConsent(event.target.checked)} className="mt-1 h-4 w-4 accent-studio-accent" />
-                  Save this consented voice sample and transcript on this device for repeated use.
+                  I have permission to save this voice sample and transcript in private server storage.
                 </label>
                 <button type="button" disabled={!profileName.trim() || !profileConsent || referenceQualityReport?.status === "block"} onClick={() => onProfileSave(profileName, profileConsent)} className="inline-flex items-center justify-center gap-2 rounded-xl bg-studio-accent px-3 py-2 text-sm font-semibold text-white disabled:opacity-45">
-                  <Save size={15} /> Save Local Profile
+                  <Save size={15} /> Save Voice Profile
                 </button>
               </div>
             )}

@@ -1,0 +1,14 @@
+Thalika iPhone Cloud Edition
+Derived from Thalika Voice Clone Studio by San Lin Htike and contributors.
+Upstream: https://github.com/sanlinhtik3/thalika-voice-clone
+Base revision: cf00a0c8eb269efb1796c26f152372325465eba6
+Upstream source is licensed under Apache License 2.0; see LICENSE.
+
+Modifications (2026): authenticated owner access, configurable persistent storage,
+durable job spool and safe recovery, Runpod control service, iPhone navigation,
+PWA assets, container packaging, lifecycle automation, tests, and documentation.
+This edition is independent of the upstream author and is not an endorsement.
+VoxCPM2 weights and dependencies retain their respective licenses and terms.
+
+Bundled Noto Sans Myanmar font: Copyright The Noto Project Authors.
+Licensed under the SIL Open Font License 1.1; see public/fonts/OFL.txt.

@@ -139,7 +139,7 @@ function HistoryAudioPlayer({ filename }: { filename: string }) {
 
         <div className="flex gap-2">
           <a
-            href={audioUrl}
+            href={`${audioUrl}?download=1`}
             download={filename}
             className="studio-soft-chip-bg inline-flex items-center gap-2 rounded-full border border-white/10 px-3 py-2 text-xs font-semibold text-studio-text transition hover:border-studio-accent"
           >

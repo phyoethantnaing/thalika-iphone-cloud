@@ -1,3 +1,7 @@
+import { assertStorageAvailable } from "../cloud/storage";
+import { validateAudioPayload } from "../security/audio-upload";
+import { checkCancelled, enqueue, ensureRecovery, existingSubmission, queueState, submissionDigest, withSubmissionLock, workQueue } from "./job-queue";
+import { checkVoxCPM2Health } from "../providers/voxcpm2-health";
 import { localIsoString } from "@/lib/file-utils";
 import { detectScriptLanguage } from "@/lib/language-utils";
 import { normalizeBurmeseScript } from "@/lib/burmese-normalizer";
@@ -57,6 +61,7 @@ async function runGeneration({ baseJob, effectiveInput, scriptId, title }: Gener
   let lastProgress: { completedChunks: number; totalChunks: number; progressMessage?: string } | undefined;
 
   try {
+    await checkCancelled(baseJob.id);
     const provider = getProvider(effectiveInput.provider);
     const audio = await provider.generate({
       ...effectiveInput,
@@ -64,6 +69,7 @@ async function runGeneration({ baseJob, effectiveInput, scriptId, title }: Gener
       scriptId,
       title,
       onProgress: async (progress) => {
+        await checkCancelled(baseJob.id);
         lastProgress = { completedChunks: progress.completedChunks, totalChunks: progress.totalChunks, progressMessage: progress.message };
         await saveJob({
           ...baseJob,
@@ -99,7 +105,10 @@ async function runGeneration({ baseJob, effectiveInput, scriptId, title }: Gener
   }
 }
 
-export async function startVoiceGeneration(input: GenerateVoiceRequest): Promise<GenerationStarted> {
+async function prepareVoiceGeneration(input: GenerateVoiceRequest, key: string, digest: string): Promise<GenerationStarted> {
+  if (queueState.stopping) throw new Error("GPU is stopping. Try after the next session starts.");
+  if (!(await checkVoxCPM2Health()).ok) throw new Error("VoxCPM2 is not ready yet");
+  await assertStorageAvailable();
   let effectiveInput = { ...input };
   if (input.voiceProfileId) {
     const saved = await getVoiceProfile(input.voiceProfileId);
@@ -110,6 +119,7 @@ export async function startVoiceGeneration(input: GenerateVoiceRequest): Promise
       referenceQualityReport: effectiveInput.referenceQualityReport || saved.profile.qualityReport
     };
   }
+  if (effectiveInput.referenceAudio) validateAudioPayload(effectiveInput.referenceAudio);
   // Burmese scripts get the production QA layer (pronunciation normalization + approval gate +
   // reference-quality block) automatically — keyed on the detected language, not a provider.
   const isBurmeseScript = detectScriptLanguage(effectiveInput.script).code === "my";
@@ -172,15 +182,9 @@ export async function startVoiceGeneration(input: GenerateVoiceRequest): Promise
     content: "Generation is in progress."
   });
 
-  // Fire-and-forget: the job record is the source of truth from here. The client polls it for
-  // live progress and the final result, so a long multi-chunk generation no longer depends on a
-  // single long-lived HTTP request staying open.
-  void runGeneration({
-    baseJob,
-    effectiveInput,
-    scriptId: scriptRecord.id,
-    title: scriptRecord.title
-  }).catch(() => undefined);
+  const started: GenerationStarted = { jobId, scriptId: scriptRecord.id, status: "generating", provider: effectiveInput.provider, format: effectiveInput.format, createdAt };
+  await enqueue(key, digest, { baseJob, effectiveInput, scriptId: scriptRecord.id, title: scriptRecord.title }, started);
+  void tickGenerationQueue().catch(() => undefined);
 
   return {
     jobId,
@@ -190,4 +194,15 @@ export async function startVoiceGeneration(input: GenerateVoiceRequest): Promise
     format: effectiveInput.format,
     createdAt
   };
+}
+
+export async function tickGenerationQueue() { await workQueue<GenerationContext>(runGeneration); }
+export async function startVoiceGeneration(input: GenerateVoiceRequest, key: string): Promise<GenerationStarted> {
+  await ensureRecovery();
+  const digest = submissionDigest(input);
+  return withSubmissionLock(async () => {
+    const old = await existingSubmission(key, digest);
+    if (old) return old as GenerationStarted;
+    return prepareVoiceGeneration(input, key, digest);
+  });
 }

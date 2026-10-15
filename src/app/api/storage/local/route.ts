@@ -80,7 +80,7 @@ async function inspectFolder(folder: FolderDefinition) {
       .filter(
         (entry) =>
           entry.isFile() &&
-          !entry.name.startsWith(".") &&
+          !entry.name.startsWith(".") && !entry.name.endsWith(".tmp") &&
           (folder.extensions.length === 0 || folder.extensions.includes(path.extname(entry.name)))
       )
       .map(async (entry) => {

@@ -1,3 +1,4 @@
+import { assertStorageAvailable } from "../cloud/storage";
 import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
 import os from "node:os";
@@ -479,6 +480,7 @@ async function generateRemote(input: GenerateVoiceInput) {
       acceptedTakeStats.push(selectedStats);
 
       const chunkPath = path.join(temporaryDir, `chunk-${chunkIndex}.wav`);
+      await assertStorageAvailable(converted.wav.length);
       await fs.writeFile(chunkPath, converted.wav);
       audioChunkPaths.push(chunkPath);
       remoteFormats.add(converted.remoteFormat);
@@ -516,6 +518,8 @@ async function generateRemote(input: GenerateVoiceInput) {
 
     // QA-only: when THALIKA_KEEP_RAW_OUTPUT is set, keep an un-mastered sibling merged from the
     // SAME chunks (no trim, no normalize) so History can A/B the mastering on identical content.
+    const chunkBytes = (await Promise.all(audioChunkPaths.map(p => fs.stat(p)))).reduce((sum, stat) => sum + stat.size, 0);
+    await assertStorageAvailable(chunkBytes * (keepRawOutput() ? 2 : 1) + chunks.length * 48_000 * 3);
     let rawAudioFile: string | undefined;
     if (keepRawOutput()) {
       rawAudioFile = sanitizeFilename(`${outputStem}_raw.wav`);
