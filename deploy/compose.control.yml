@@ -1,0 +1,16 @@
+# Run on an existing always-on host with persistent disk and an HTTPS reverse proxy.
+services:
+  control:
+    image: ${THALIKA_CONTROL_IMAGE:?Set a tested control image digest}
+    restart: unless-stopped
+    env_file: ../.env.control
+    ports:
+      - "127.0.0.1:3001:3000"
+    volumes:
+      - ${CONTROL_STATE_DIR:?Set private writable state directory}:/workspace/persistent
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    read_only: true
+    tmpfs:
+      - /tmp:uid=10001,gid=10001,mode=700

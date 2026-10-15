@@ -11,6 +11,10 @@ service already serialized inference and seeded Python/NumPy/Torch. The Node
 provider already chunked Burmese text, normalized/approved pronunciation,
 matched chunk loudness, selected outlier takes and mastered PCM WAV.
 
+The cloud edition upgrades Next.js to pinned 16.4.1 and PostCSS to 8.5.23 after
+registry advisories identified a proxy bypass and other issues in the upstream
+versions. Compatible transitive fixes and Electron 42.11.14 are locked as well.
+
 Original gaps addressed:
 
 - All filesystem, settings and model process routes trusted local callers.

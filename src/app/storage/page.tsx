@@ -263,7 +263,7 @@ export default function StoragePage() {
             </div>
             <div>
               <h2 className="text-lg font-semibold text-studio-text">Local Storage</h2>
-              <p className="text-sm text-studio-muted">
+              <p className="break-all text-sm text-studio-muted">
                 {storage ? `Root: ${storage.root}` : "Loading app-managed folders."}
               </p>
             </div>

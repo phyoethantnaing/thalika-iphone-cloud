@@ -1,0 +1,17 @@
+{
+  "name": "Thalika iPhone GPU",
+  "imageName": "ghcr.io/YOUR_ACCOUNT/thalika-iphone-cloud-gpu@sha256:REPLACE_AFTER_BUILD",
+  "containerDiskInGb": 40,
+  "volumeMountPath": "/workspace",
+  "ports": ["3000/http"],
+  "env": {
+    "THALIKA_CLOUD": "1",
+    "THALIKA_ROLE": "studio",
+    "VOXCPM_DEVICE": "cuda",
+    "OWNER_PASSWORD_HASH": "{{ RUNPOD_SECRET_thalika_owner_hash }}",
+    "SESSION_SECRET": "{{ RUNPOD_SECRET_thalika_session_secret }}",
+    "RUNTIME_TOKEN": "{{ RUNPOD_SECRET_thalika_runtime_token }}",
+    "GEMINI_API_KEY": "{{ RUNPOD_SECRET_thalika_gemini }}",
+    "CONTROL_PLANE_URL": "https://control.example.com/settings"
+  }
+}

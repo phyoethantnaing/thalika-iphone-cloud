@@ -125,3 +125,5 @@ audio { min-width: 0; max-width: 100%; height: 54px; }
 @media (min-width: 1024px) { .studio-workflow { grid-template-columns: minmax(0,1.35fr) minmax(320px,.65fr); align-items: start; } .script-step { grid-column: 1; grid-row: 1 / span 2; } .reference-step { grid-column: 2; grid-row: 1; } .result-step { grid-column: 2; grid-row: 2; } }
 @font-face { font-family: "Thalika Myanmar"; src: url('/fonts/NotoSansMyanmar.ttf') format('truetype'); font-weight: 100 900; font-style: normal; font-display: swap; unicode-range: U+1000-109F, U+A9E0-A9FF, U+AA60-AA7F; }
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Thalika Myanmar", "Myanmar Text", "Myanmar Sangam MN", sans-serif; }
+/* Flex/grid content must yield to the viewport after web fonts and folder data arrive. */
+.page-shell .grid > *, .page-shell .flex > div { min-width: 0; }
