@@ -78,24 +78,24 @@ GitHub Actions နှင့် registry publication ကိုလည်း run �
 ## GitHub delivery အခြေအနေ
 
 Authenticated account: **phyoethantnaing**.
-Requested destination: `https://github.com/phyoethantnaing/thalika-iphone-cloud`.
-The destination was not resolvable during verification. Repository creation was
-retried and GitHub returned:
+Destination: **https://github.com/phyoethantnaing/thalika-iphone-cloud**.
+Branch: `cloud-iphone`.
 
-```text
-GraphQL: Resource not accessible by integration (createRepository)
-```
+**Source code နှင့် commit history ကို GitHub ပေါ်တင်ပြီးပါပြီ။** Owner ကပေးထားသော
+repository ကို empty ဖြစ်ကြောင်းနှင့် authenticated account တွင် ADMIN access
+ရှိကြောင်း အရင်စစ်ဆေးခဲ့သည်။ ပထမဆုံး upload commit
+`0e5bd957a472c658cfbc8ec977bfcab92cc1fa41` ကို `git ls-remote` နှင့် GitHub commits
+API နှစ်ခုလုံးက SHA တူကြောင်းအတည်ပြုထားသည်။ ဤ documentation update ၏ final SHA
+ကို `git rev-parse HEAD` နှင့် remote branch head ဖြင့်ထပ်စစ်နိုင်သည်။
 
-**Repository ဖန်တီးခြင်းနှင့် push မအောင်မြင်သေးပါ။** Unrelated repositories များကို
-မသုံးထားပါ။ Upstream push URL ကို `DISABLED_UPSTREAM_PUSH` အဖြစ်ပိတ်ထားသည်။
-Complete local repository၊ tracked-source ZIP နှင့် verified Git bundle ကို
-fallback အဖြစ်ပေးထားသည်။
+ယခင် repository creation သည် integration permission ကြောင့်ပိတ်ခဲ့သော်လည်း
+owner က destination ဖန်တီးပေးပြီးနောက် source upload အောင်မြင်ခဲ့သည်။ Unrelated
+repositories များကိုမပြောင်းထားပါ။ Upstream push URL သည်
+`DISABLED_UPSTREAM_PUSH` အဖြစ်ဆက်ပိတ်ထားသည်။
 
-သင့် account မှ [empty private repository](https://github.com/new) တစ်ခုကို
-`thalika-iphone-cloud` အမည်ဖြင့်ဖန်တီးပြီး connected GitHub app access ပေးပါ။
-ထို့နောက် [GitHub delivery commands](OPERATIONS.my.md#github-delivery-ကိုဆက်လုပ်ရန်)
-အတိုင်း `cloud-iphone` ကို push လုပ်ပြီး `git ls-remote` SHA နှင့် local SHA
-တူကြောင်းစစ်ပါ။ Existing unrelated content ရှိပါက overwrite/force-push မလုပ်ပါနှင့်။
+Complete local repository၊ tracked-source ZIP နှင့် verified Git bundle လည်း
+ရှိသည်။ နောက်ပိုင်း update အတွက် [Git commands](OPERATIONS.my.md) ကိုသုံးပြီး
+remote SHA ကိုစစ်ပါ။ Existing unrelated content ကို overwrite/force-push မလုပ်ပါနှင့်။
 
 ## စတင်အသုံးပြုရန် ကျန်သော လုပ်ဆောင်ချက်များ
 
