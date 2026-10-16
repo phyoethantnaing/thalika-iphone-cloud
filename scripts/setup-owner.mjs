@@ -1,6 +1,6 @@
 import { randomBytes, scryptSync } from 'node:crypto';
 import { writeFileSync, existsSync } from 'node:fs';
-// Never write or print the password; generated credentials go only to a private local file.
+// Never print the password; write generated credentials only to private local files.
 const password = randomBytes(24).toString('base64url');
 const salt = randomBytes(16).toString('hex');
 const destination = process.argv[2] || '.env.local';

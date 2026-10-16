@@ -1,113 +1,117 @@
 # Source change inventory
 
-Based on upstream `cf00a0c8eb269efb1796c26f152372325465eba6`.
+Compared with upstream `cf00a0c8eb269efb1796c26f152372325465eba6`.
 
-## Changed
+| Status | File |
+| --- | --- |
+| A | `.dockerignore` |
+| M | `.env.example` |
+| A | `.github/workflows/image.yml` |
+| A | `.github/workflows/validate.yml` |
+| M | `.gitignore` |
+| M | `AGENTS.md` |
+| A | `Dockerfile` |
+| A | `NOTICE` |
+| M | `README.md` |
+| A | `SKILL.md` |
+| A | `deploy/compose.control.yml` |
+| A | `deploy/runpod-template.example.json` |
+| A | `docs/ARCHITECTURE.md` |
+| A | `docs/AUDIT.md` |
+| A | `docs/CHANGES.md` |
+| A | `docs/DELIVERY.md` |
+| A | `docs/OPERATIONS.my.md` |
+| A | `docs/SECURITY.md` |
+| A | `docs/TESTING.md` |
+| A | `docs/UPSTREAM_AGENTS.md` |
+| A | `docs/UPSTREAM_README.md` |
+| A | `local-server/requirements.lock` |
+| M | `local-server/requirements.txt` |
+| M | `local-server/server.py` |
+| M | `next-env.d.ts` |
+| M | `next.config.ts` |
+| M | `package-lock.json` |
+| M | `package.json` |
+| A | `playwright.config.ts` |
+| A | `public/fonts/NotoSansMyanmar.ttf` |
+| A | `public/fonts/OFL.txt` |
+| A | `public/icons/apple-touch-icon.png` |
+| A | `public/icons/icon-192.png` |
+| A | `public/icons/icon-512.png` |
+| A | `public/offline.html` |
+| A | `public/sw.js` |
+| A | `scripts/backup.py` |
+| A | `scripts/build-image.sh` |
+| A | `scripts/container-start.py` |
+| A | `scripts/init-volume.sh` |
+| A | `scripts/readiness.mjs` |
+| A | `scripts/runpod.mjs` |
+| A | `scripts/setup-owner.mjs` |
+| M | `scripts/voxcpm-local.sh` |
+| A | `src/app/api/activity/route.ts` |
+| M | `src/app/api/audio/[filename]/route.ts` |
+| A | `src/app/api/auth/login/route.ts` |
+| A | `src/app/api/auth/logout/route.ts` |
+| A | `src/app/api/cloud/action/route.ts` |
+| A | `src/app/api/cloud/status/route.ts` |
+| M | `src/app/api/generate/route.ts` |
+| A | `src/app/api/internal/runtime/route.ts` |
+| A | `src/app/api/jobs/[jobId]/cancel/route.ts` |
+| M | `src/app/api/scripts/route.ts` |
+| A | `src/app/api/settings/preferences/route.ts` |
+| M | `src/app/api/storage/local/route.ts` |
+| A | `src/app/api/storage/usage/route.ts` |
+| A | `src/app/api/voice-profiles/[profileId]/audio/route.ts` |
+| M | `src/app/api/voxcpm-local/route.ts` |
+| M | `src/app/globals.css` |
+| M | `src/app/layout.tsx` |
+| A | `src/app/login/page.tsx` |
+| A | `src/app/manifest.ts` |
+| M | `src/app/page.tsx` |
+| M | `src/app/script/page.tsx` |
+| A | `src/app/settings/page.tsx` |
+| M | `src/app/storage/page.tsx` |
+| A | `src/app/voices/page.tsx` |
+| M | `src/components/AppHeader.tsx` |
+| M | `src/components/AudioPreview.tsx` |
+| A | `src/components/CloudDashboard.tsx` |
+| M | `src/components/HistoryPanel.tsx` |
+| A | `src/components/JobRecovery.tsx` |
+| A | `src/components/PwaClient.tsx` |
+| A | `src/components/ScriptLibrary.tsx` |
+| A | `src/components/StorageQuota.tsx` |
+| M | `src/components/StudioPageShell.tsx` |
+| M | `src/components/VoiceSettings.tsx` |
+| A | `src/instrumentation.ts` |
+| A | `src/lib/cloud/control.ts` |
+| A | `src/lib/cloud/files.ts` |
+| A | `src/lib/cloud/runpod.ts` |
+| A | `src/lib/cloud/runtime.ts` |
+| A | `src/lib/cloud/storage.ts` |
+| M | `src/lib/file-utils.ts` |
+| M | `src/lib/providers/voxcpm2-health.ts` |
+| M | `src/lib/providers/voxcpm2-provider.ts` |
+| A | `src/lib/security/audio-upload.ts` |
+| A | `src/lib/security/session.ts` |
+| M | `src/lib/services/generation-service.ts` |
+| A | `src/lib/services/job-queue.ts` |
+| M | `src/lib/storage/env-store.ts` |
+| M | `src/lib/storage/job-store.ts` |
+| M | `src/lib/storage/voice-profile-store.ts` |
+| M | `src/lib/types.ts` |
+| M | `src/lib/validators.ts` |
+| A | `src/proxy.ts` |
+| A | `tests/audio.test.ts` |
+| A | `tests/backup.test.ts` |
+| A | `tests/browser/studio.spec.ts` |
+| A | `tests/container-smoke.mjs` |
+| A | `tests/control.test.ts` |
+| A | `tests/e2e-server.mjs` |
+| A | `tests/fake-inference.d.mts` |
+| A | `tests/fake-inference.mjs` |
+| A | `tests/persistence.test.ts` |
+| A | `tests/provider.test.ts` |
+| A | `tests/python-contract.py` |
+| A | `tests/security.test.ts` |
 
-- `.env.example`
-- `.gitignore`
-- `AGENTS.md`
-- `README.md`
-- `local-server/requirements.txt`
-- `local-server/server.py`
-- `next.config.ts`
-- `package-lock.json`
-- `package.json`
-- `scripts/voxcpm-local.sh`
-- `src/app/api/audio/[filename]/route.ts`
-- `src/app/api/generate/route.ts`
-- `src/app/api/scripts/route.ts`
-- `src/app/api/storage/local/route.ts`
-- `src/app/api/voxcpm-local/route.ts`
-- `src/app/globals.css`
-- `src/app/layout.tsx`
-- `src/app/page.tsx`
-- `src/app/script/page.tsx`
-- `src/app/storage/page.tsx`
-- `src/components/AppHeader.tsx`
-- `src/components/AudioPreview.tsx`
-- `src/components/HistoryPanel.tsx`
-- `src/components/StudioPageShell.tsx`
-- `src/components/VoiceSettings.tsx`
-- `src/lib/file-utils.ts`
-- `src/lib/providers/voxcpm2-health.ts`
-- `src/lib/providers/voxcpm2-provider.ts`
-- `src/lib/services/generation-service.ts`
-- `src/lib/storage/env-store.ts`
-- `src/lib/storage/job-store.ts`
-- `src/lib/storage/voice-profile-store.ts`
-- `src/lib/types.ts`
-- `src/lib/validators.ts`
-
-## Added
-
-- `.dockerignore`
-- `.github/workflows/image.yml`
-- `.github/workflows/validate.yml`
-- `Dockerfile`
-- `NOTICE`
-- `SKILL.md`
-- `deploy/compose.control.yml`
-- `deploy/runpod-template.example.json`
-- `docs/ARCHITECTURE.md`
-- `docs/AUDIT.md`
-- `docs/OPERATIONS.my.md`
-- `docs/TESTING.md`
-- `docs/UPSTREAM_AGENTS.md`
-- `docs/UPSTREAM_README.md`
-- `local-server/requirements.lock`
-- `playwright.config.ts`
-- `public/fonts/NotoSansMyanmar.ttf`
-- `public/fonts/OFL.txt`
-- `public/icons/apple-touch-icon.png`
-- `public/icons/icon-192.png`
-- `public/icons/icon-512.png`
-- `public/offline.html`
-- `public/sw.js`
-- `scripts/backup.py`
-- `scripts/build-image.sh`
-- `scripts/container-start.py`
-- `scripts/init-volume.sh`
-- `scripts/readiness.mjs`
-- `scripts/runpod.mjs`
-- `scripts/setup-owner.mjs`
-- `src/app/api/activity/route.ts`
-- `src/app/api/auth/login/route.ts`
-- `src/app/api/auth/logout/route.ts`
-- `src/app/api/cloud/action/route.ts`
-- `src/app/api/cloud/status/route.ts`
-- `src/app/api/internal/runtime/route.ts`
-- `src/app/api/jobs/[jobId]/cancel/route.ts`
-- `src/app/api/settings/preferences/route.ts`
-- `src/app/api/storage/usage/route.ts`
-- `src/app/api/voice-profiles/[profileId]/audio/route.ts`
-- `src/app/login/page.tsx`
-- `src/app/manifest.ts`
-- `src/app/settings/page.tsx`
-- `src/app/voices/page.tsx`
-- `src/components/CloudDashboard.tsx`
-- `src/components/JobRecovery.tsx`
-- `src/components/PwaClient.tsx`
-- `src/components/ScriptLibrary.tsx`
-- `src/components/StorageQuota.tsx`
-- `src/instrumentation.ts`
-- `src/lib/cloud/control.ts`
-- `src/lib/cloud/files.ts`
-- `src/lib/cloud/runpod.ts`
-- `src/lib/cloud/runtime.ts`
-- `src/lib/cloud/storage.ts`
-- `src/lib/security/audio-upload.ts`
-- `src/lib/security/session.ts`
-- `src/lib/services/job-queue.ts`
-- `src/proxy.ts`
-- `tests/audio.test.ts`
-- `tests/backup.test.ts`
-- `tests/browser/studio.spec.ts`
-- `tests/control.test.ts`
-- `tests/e2e-server.mjs`
-- `tests/fake-inference.d.mts`
-- `tests/fake-inference.mjs`
-- `tests/persistence.test.ts`
-- `tests/provider.test.ts`
-- `tests/python-contract.py`
-- `tests/security.test.ts`
+`docs/DELIVERY.md` records validation; `git log` identifies the final delivery commit.
