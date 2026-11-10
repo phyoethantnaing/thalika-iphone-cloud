@@ -19,7 +19,12 @@ flowchart LR
 ## စတင်ရန် (တစ်ကြိမ်တည်း)
 
 1. [kaggle.com](https://www.kaggle.com) account တွင် **ဖုန်းနံပါတ် verify** လုပ်ပါ (GPU နှင့် Internet အတွက်လိုသည်)။
-2. **Create → New Notebook → File → Import Notebook** ဖြင့် [`kaggle/thalika-kaggle.ipynb`](kaggle/thalika-kaggle.ipynb) ကိုထည့်ပါ။
+2. Kaggle တွင် **Create → New Notebook** ဖွင့်ပြီး ပထမ code cell ထဲသို့ ဒီတစ်ကြောင်းကို paste လုပ်ပါ
+   (သို့) [Open in Kaggle](https://www.kaggle.com/kernels/welcome?src=https://github.com/phyoethantnaing/thalika-iphone-cloud/blob/cloud-iphone/kaggle/thalika-kaggle.ipynb) ကိုနှိပ်ပါ:
+
+   ```text
+   !rm -rf /tmp/thalika && git clone -q --depth 1 -b cloud-iphone https://github.com/phyoethantnaing/thalika-iphone-cloud /tmp/thalika && python /tmp/thalika/scripts/kaggle-start.py
+   ```
 3. Notebook **Settings**: **Accelerator → GPU T4 x2**၊ **Internet → On**၊ notebook ကို **Private** ထားပါ။
 4. **Add-ons → Secrets**: `THALIKA_OWNER_PASSWORD` (စာလုံး ၁၂ လုံးအထက်) ထည့်ပြီး ဒီ notebook ကို attach လုပ်ပါ။
 

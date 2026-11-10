@@ -16,8 +16,14 @@ flowchart LR
 
 1. [kaggle.com](https://www.kaggle.com) account တွင် **ဖုန်းနံပါတ် verify** လုပ်ပါ။ မလုပ်ထားလျှင်
    GPU နှင့် Internet ကို ဖွင့်မရပါ။
-2. **Create → New Notebook → File → Import Notebook** ကိုနှိပ်ပြီး ဒီ repo ထဲက
-   [`kaggle/thalika-kaggle.ipynb`](../kaggle/thalika-kaggle.ipynb) ကို upload လုပ်ပါ။
+2. Notebook ထည့်ရန် နည်းနှစ်ခုရှိသည် (iPhone ပေါ်တွင် **နည်း ခ** က အလွယ်ဆုံး):
+   - **က။ One-tap link:** Kaggle login ဝင်ထားပြီး [Open in Kaggle](https://www.kaggle.com/kernels/welcome?src=https://github.com/phyoethantnaing/thalika-iphone-cloud/blob/cloud-iphone/kaggle/thalika-kaggle.ipynb) ကိုနှိပ်ပါ။
+   - **ခ။ Copy-paste:** **Create → New Notebook** ဖွင့်ပြီး ပထမ code cell ထဲက စာကိုဖျက်ကာ
+     အောက်ပါ **တစ်ကြောင်းတည်း** ကို paste လုပ်ပါ (file upload မလို):
+
+     ```text
+     !rm -rf /tmp/thalika && git clone -q --depth 1 -b cloud-iphone https://github.com/phyoethantnaing/thalika-iphone-cloud /tmp/thalika && python /tmp/thalika/scripts/kaggle-start.py
+     ```
 3. ညာဘက် **Settings** panel တွင်:
    - **Accelerator → GPU T4 x2** (P100 ကို PyTorch 2.8 မထောက်ပံ့တော့သဖြင့် launcher က ငြင်းပါမည်)
    - **Internet → On**
