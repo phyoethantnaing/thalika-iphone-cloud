@@ -5,7 +5,7 @@ import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { checkPassword } from "../src/lib/security/session";
-import { studioHostStatus } from "../src/lib/cloud/control";
+import { gpuHostStatus } from "../src/lib/cloud/host";
 
 const launcher = path.resolve("scripts/kaggle-start.py");
 function py(expression: string, env: Record<string, string> = {}) {
@@ -52,11 +52,11 @@ test("Kaggle notebook clones the repository and runs only the launcher", () => {
   assert.equal(meta.is_private, true); assert.equal(meta.enable_gpu, true); assert.equal(meta.enable_internet, true);
 });
 
-test("Studio reports Kaggle host and session deadline without provider credentials", () => {
+test("Studio reports the Kaggle host and session deadline", () => {
   process.env.THALIKA_GPU_HOST = "kaggle"; process.env.THALIKA_SESSION_DEADLINE = "2026-11-10T20:00:00Z";
-  const status = studioHostStatus();
+  const status = gpuHostStatus();
   assert.equal(status.host, "kaggle"); assert.equal(status.sessionEndsAt, "2026-11-10T20:00:00.000Z");
   assert.equal(status.dashboardUrl, "https://www.kaggle.com/code");
   delete process.env.THALIKA_GPU_HOST; delete process.env.THALIKA_SESSION_DEADLINE;
-  assert.equal(studioHostStatus().host, "runpod");
+  assert.equal(gpuHostStatus().host, "local"); assert.equal(gpuHostStatus().sessionEndsAt, null);
 });

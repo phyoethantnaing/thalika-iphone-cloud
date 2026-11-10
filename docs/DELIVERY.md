@@ -97,30 +97,23 @@ Complete local repository၊ tracked-source ZIP နှင့် verified Git bun
 ရှိသည်။ နောက်ပိုင်း update အတွက် [Git commands](OPERATIONS.my.md) ကိုသုံးပြီး
 remote SHA ကိုစစ်ပါ။ Existing unrelated content ကို overwrite/force-push မလုပ်ပါနှင့်။
 
+## 2026-11-10 update: Kaggle-only hosting
+
+Owner ၏တောင်းဆိုချက်အရ Runpod REST adapter၊ separate control plane၊ Docker images၊
+image workflow၊ volume/readiness/operator scripts နှင့် ၎င်းတို့၏ tests များကို ဖယ်ရှားလိုက်ပါသည်။
+အထက်ပါ CPU/GPU container နှင့် Runpod ဆိုင်ရာရလဒ်များသည် မှတ်တမ်းအဖြစ်သာ ကျန်ပါသည်။
+ယခု deployment လမ်းကြောင်းတစ်ခုတည်းမှာ Kaggle T4 notebook + Cloudflare tunnel + iPhone Safari ဖြစ်သည်
+([Kaggle လမ်းညွှန်](KAGGLE.my.md))။ VoxCPM2 2.0.3၊ 11-argument contract၊ Burmese pipeline နှင့်
+48 kHz mono 24-bit WAV ကို မပြောင်းပါ။ T4 အတွက် float32/no-compile fallback နှင့် upstream ၏
+24-bit engine output / temp-take cleanup (`dc7585a`) ပါဝင်သည်။
+
 ## စတင်အသုံးပြုရန် ကျန်သော လုပ်ဆောင်ချက်များ
 
-1. [Myanmar README](../README.md) အတိုင်း owner credentials ကို private file တွင်
-   တစ်ကြိမ်ဖန်တီးပါ။ Local development ကို cloud provisioning မလုပ်ဘဲစတင်နိုင်သည်။
-2. ကိုယ်ပိုင် registry တွင် final commit ၏ control/GPU images ကို build/publish
-   လုပ်ပြီး immutable digests မှတ်ပါ။ Account allowance နှင့် build charges ကိုစစ်ပါ။
-3. Runpod account/billing၊ လက်ရှိ GPU availability/price နှင့် supported network
-   volume location ကိုကိုယ်တိုင်စစ်ပြီးမှ paid resources ဖန်တီးပါ။ အသစ်သော persistent
-   directories ကို UID/GID 10001 ရေးနိုင်အောင်တစ်ကြိမ်ပြင်ဆင်ပါ။
-4. Provider secrets ထည့်ပြီး GPU template တွင် image digest/volume/port 3000 ကို
-   configure လုပ်ပါ။ Port 7860 ကို public မဖွင့်ပါနှင့်။
-5. ရှိပြီးသား HTTPS CPU host တွင် optional controller deploy လုပ်ပါ၊ သို့မဟုတ်
-   Runpod dashboard မှ start/stop လုပ်ပါ။ Extra hosting မဖြစ်မနေမလိုပါ။
-6. [Real-GPU and iPhone acceptance](TESTING.md) ပြီးမှ daily use စတင်ပါ။
-   Active jobs ပြီးဆုံးပြီးနောက် stop state ကို provider တွင်အတည်ပြုပါ။
-7. [Backup/recovery guide](OPERATIONS.my.md) အတိုင်း encrypted off-provider backup
-   ထားပါ။ Persistent storage ကို app ကအလိုအလျောက်မဖျက်ပါ။
+1. Kaggle support ပါသော branch ကို `cloud-iphone` သို့ merge လုပ်ပါ (သို့) notebook ၏ `BRANCH` ကိုပြောင်းပါ။
+2. Kaggle account ဖုန်း verify၊ notebook import၊ GPU T4 x2 + Internet On၊ `THALIKA_OWNER_PASSWORD` secret။
+3. [Kaggle T4 နှင့် iPhone acceptance](TESTING.md) ကိုလုပ်ပါ: model load၊ float32 quality နှင့်
+   မြန်နှုန်း၊ Safari ပိတ်/ပြန်ဖွင့်၊ deadline stop နှင့် data restore။
+4. Kaggle output မှ data ကို download ပြီး encrypted off-Kaggle backup ထားပါ။
 
-## ဆက်လက်ကုန်ကျနိုင်သော အမျိုးအစားများ
-
-Running GPU compute၊ network/Pod volume storage၊ transfer/gateway၊ optional control
-host/domain/HTTPS၊ registry/Actions usage နှင့် optional Gemini usage ကိုသီးခြား
-စစ်ရမည်။ Fixed price သို့မဟုတ် stopped session အားလုံးအခမဲ့ဟု မအာမခံပါ။
-App rate ရရှိမှသာ estimate ပြသည်; provider invoice ကိုအတည်ယူပါ။
-Idle stop သည် opt-in ဖြစ်ပြီး ready runtime ကိုမဆက်သွယ်နိုင်လျှင် မပိတ်ပါ။
-Failed startup နှင့် network failure ဖြစ်ချိန်တွင် provider dashboard ကိုကိုယ်တိုင်
-စစ်ရန်လိုသည်။ Budget warning သည် hard billing cap မဟုတ်ပါ။
+Kaggle GPU quota (ပုံမှန် တစ်ပတ် ~၃၀ နာရီ) နှင့် စည်းကမ်းများကို account တွင်ကိုယ်တိုင်စစ်ပါ။
+Optional Gemini usage နှင့် Cloudflare named tunnel/domain သာ သီးခြားကုန်ကျနိုင်သည်။

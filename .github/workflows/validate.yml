@@ -19,5 +19,5 @@ jobs:
       - run: npm run lint && npm test && npm run build
       - run: npx playwright install --with-deps chromium webkit
       - run: npm run test:e2e
-      - run: python -m py_compile local-server/server.py scripts/container-start.py scripts/backup.py scripts/kaggle-start.py
+      - run: python -m py_compile local-server/server.py scripts/supervise.py scripts/backup.py scripts/kaggle-start.py
       - run: python -m unittest discover -s local-server -p 'test_*.py'

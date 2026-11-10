@@ -1,8 +1,8 @@
 # Kaggle GPU ဖြင့် အသုံးပြုခြင်း (အခမဲ့ T4)
 
-Runpod မလိုဘဲ Kaggle notebook ၏ အခမဲ့ GPU ပေါ်တွင် Thalika Studio အပြည့်အစုံကို run နိုင်သည်။
-iPhone Safari မှ HTTPS link ဖြင့် ဝင်သုံးနိုင်သည်။ Model၊ Burmese pipeline၊ 48 kHz mono
-24-bit WAV output နှင့် owner login တို့သည် Runpod version နှင့်အတူတူပင်ဖြစ်သည်။
+Kaggle notebook ၏ အခမဲ့ GPU ပေါ်တွင် Thalika Studio အပြည့်အစုံကို run ပြီး iPhone Safari မှ HTTPS link
+ဖြင့် ဝင်သုံးနိုင်သည်။ မူရင်း VoxCPM2 model၊ Burmese pipeline၊ 48 kHz mono 24-bit WAV output နှင့်
+owner login တို့ကို မပြောင်းထားပါ။
 
 ```mermaid
 flowchart LR

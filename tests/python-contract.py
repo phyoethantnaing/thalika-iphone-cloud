@@ -17,7 +17,8 @@ class ContractModel:
         return np.sin(np.arange(4800, dtype=np.float32) / 48000 * 440 * 2 * np.pi) * .1
 
 with patch.object(VoxCPM, 'from_pretrained', return_value=ContractModel()):
-    module = runpy.run_path('/app/local-server/server.py', run_name='contract_test')
+    server = Path(__file__).resolve().parents[1] / 'local-server' / 'server.py'
+    module = runpy.run_path(str(server), run_name='contract_test')
     result = module['generate']('hello', 'calm', None, False, '', 2.0, True, False, 10, True, 42)
     assert sf.info(result).samplerate == 48000
     assert sf.info(result).channels == 1

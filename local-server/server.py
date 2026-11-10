@@ -69,7 +69,7 @@ def cuda_capability():
 
 # Pre-Ampere CUDA GPUs (Kaggle/Colab T4 = sm_75) have no native bfloat16, and Triton's
 # torch.compile path rejects bf16 there. The checkpoint default stays untouched on sm_80+
-# (Runpod). Override explicitly with VOXCPM_DTYPE / VOXCPM_OPTIMIZE.
+# (A100/L4 etc.). Override explicitly with VOXCPM_DTYPE / VOXCPM_OPTIMIZE.
 CAPABILITY = cuda_capability()
 LEGACY_CUDA = CAPABILITY is not None and CAPABILITY < (8, 0)
 DTYPE_OVERRIDE = os.environ.get("VOXCPM_DTYPE", "float32" if LEGACY_CUDA else "").strip().lower()

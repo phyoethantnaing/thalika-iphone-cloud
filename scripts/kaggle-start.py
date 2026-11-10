@@ -13,10 +13,10 @@ What it does, in order (everything is pinned and checksum-verified where possibl
   4. Restores saved Studio data from an attached previous notebook output, if any.
   5. Opens a Cloudflare tunnel to the authenticated Node app ONLY (port 3000).
      Gradio stays on 127.0.0.1:7860 and is never exposed.
-  6. Supervises model + Node through scripts/container-start.py until the session
+  6. Supervises model + Node through scripts/supervise.py until the session
      deadline, then stops safely (waits for active jobs) so Kaggle saves the data.
 
-Kaggle is a free, time-limited host: no provider API key is used or stored here.
+Kaggle is a free, time-limited host: no cloud-provider API key is used or stored.
 """
 from __future__ import annotations
 
@@ -188,6 +188,9 @@ def ensure_python() -> Path:
     run(uv + ["venv", "--python", PYTHON_VERSION, "--seed", str(venv)])
     run(uv + ["pip", "install", "--python", str(python), "-r", str(lock)])
     run([str(python), "-c", "import torch, torchaudio, gradio, voxcpm; print('torch', torch.__version__, 'cuda', torch.cuda.is_available())"])
+    # Real dependencies + the 11-argument Gradio contract, with a test-double model (no weights).
+    run([str(python), str(REPO / "tests" / "python-contract.py")],
+        env={**os.environ, "THALIKA_MODEL_STATUS": str(RUNTIME / "contract-status.json"), "GRADIO_ANALYTICS_ENABLED": "False"})
     stamp.write_text(digest)
     return python
 
@@ -328,7 +331,7 @@ def main() -> None:
     env = {
         **os.environ,
         "NODE_ENV": "production", "NEXT_TELEMETRY_DISABLED": "1", "HOSTNAME": "127.0.0.1", "PORT": "3000",
-        "THALIKA_CLOUD": "1", "THALIKA_ROLE": "studio", "THALIKA_GPU_HOST": "kaggle",
+        "THALIKA_CLOUD": "1", "THALIKA_GPU_HOST": "kaggle",
         "THALIKA_SESSION_DEADLINE": deadline.strftime("%Y-%m-%dT%H:%M:%SZ"),
         "APP_ORIGIN": origin, "OWNER_PASSWORD_HASH": password_hash, "SESSION_SECRET": session_secret,
         "RUNTIME_TOKEN": runtime_token,
@@ -345,10 +348,10 @@ def main() -> None:
     for optional in ("GEMINI_API_KEY", "HF_TOKEN"):
         if (value := secret(optional)):
             env[optional] = value
-    for drop in ("RUNPOD_API_KEY", "CLOUDFLARE_TUNNEL_TOKEN", "THALIKA_OWNER_PASSWORD", "TUNNEL_TOKEN"):
+    for drop in ("CLOUDFLARE_TUNNEL_TOKEN", "THALIKA_OWNER_PASSWORD", "TUNNEL_TOKEN"):
         env.pop(drop, None)
 
-    supervisor = subprocess.Popen([sys.executable, str(REPO / "scripts" / "container-start.py")], cwd=REPO, env=env)
+    supervisor = subprocess.Popen([sys.executable, str(REPO / "scripts" / "supervise.py")], cwd=REPO, env=env)
     banner(origin, deadline)
     (WORK / "THALIKA_URL.txt").write_text(origin + "\n", encoding="utf-8")
     notify(origin)
@@ -386,7 +389,7 @@ def main() -> None:
                     supervisor.wait(timeout=60)
                     origin = new_url
                     env["APP_ORIGIN"] = origin
-                    supervisor = subprocess.Popen([sys.executable, str(REPO / "scripts" / "container-start.py")], cwd=REPO, env=env)
+                    supervisor = subprocess.Popen([sys.executable, str(REPO / "scripts" / "supervise.py")], cwd=REPO, env=env)
                     banner(origin, deadline)
                     (WORK / "THALIKA_URL.txt").write_text(origin + "\n", encoding="utf-8")
                     notify(origin)

@@ -37,9 +37,7 @@ export async function proxy(request: NextRequest) {
     }
   }
   if (loginRoute) return NextResponse.next();
-  if (process.env.THALIKA_ROLE === "control" && !api && route !== "/settings") return NextResponse.redirect(new URL("/settings", request.url));
-  if (process.env.THALIKA_ROLE === "control" && api && !/^\/api\/(cloud\/|auth\/)/.test(route)) return reject("Studio is available on the GPU Pod", 404);
-  if (process.env.THALIKA_CLOUD === "1" && mutation && ["/api/voxcpm-local", "/api/settings/voxcpm2-endpoint"].includes(route)) return reject("Container supervisor manages the model in cloud mode", 409);
+  if (process.env.THALIKA_CLOUD === "1" && mutation && ["/api/voxcpm-local", "/api/settings/voxcpm2-endpoint"].includes(route)) return reject("The Kaggle launcher manages the model in cloud mode", 409);
   const response = NextResponse.next();
   response.headers.set("Cache-Control", "no-store");
   return response;
