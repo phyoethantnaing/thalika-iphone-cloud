@@ -11,10 +11,11 @@ import time
 p=argparse.ArgumentParser()
 p.add_argument('action',choices=['backup','restore','verify'])
 p.add_argument('archive',type=Path)
-p.add_argument('--root',type=Path,default=Path(os.environ.get('THALIKA_PERSISTENT_ROOT','/workspace/persistent')))
+p.add_argument('--root',type=Path,default=Path(os.environ['THALIKA_PERSISTENT_ROOT']) if os.environ.get('THALIKA_PERSISTENT_ROOT') else None,help='Folder containing data/ (and optional config/, models/)')
 p.add_argument('--confirm-quiescent',action='store_true',help='Confirm all writers are stopped before backup')
 p.add_argument('--include-models',action='store_true')
 a=p.parse_args()
+if a.action!='verify' and a.root is None: p.error('--root is required for backup and restore')
 os.umask(0o077)
 if a.action=='backup':
     if not a.confirm_quiescent: p.error('Stop generation and all writers; pass --confirm-quiescent')

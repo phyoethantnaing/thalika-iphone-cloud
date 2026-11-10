@@ -2,13 +2,13 @@
 
 Run `npm run lint`, `npm test`, `npm run build`, then `npm run test:e2e`.
 The browser tests use an explicitly isolated Gradio test double that returns a
-synthetic sine-wave WAV. It is excluded from all production images. Passing those
+synthetic sine-wave WAV. It is never used by the Kaggle launcher. Passing those
 tests proves application/job/audio contracts, not VoxCPM2 voice quality.
 
 Automated coverage includes owner session signatures/expiry, origin validation,
 unauthorized private APIs, decoded upload size/MIME/signatures, traversal rejection,
-consent, provider request contracts and credential redaction, actual-state vs model
-readiness, active-job stop refusal, ambiguous create suppression, persistent pending
+consent, Kaggle launcher owner-hash/tunnel/deadline/restore helpers, model readiness,
+active-job stop refusal, persistent pending
 and interrupted jobs, single-worker serialization, cancellation, original PCM master
 encoding/merge, Burmese punctuation/chunking, mobile portrait/landscape overflow,
 Files-style upload, saved profiles/scripts, tab-close job recovery, downloads/ranges,
@@ -16,24 +16,18 @@ manifest/icons and conservative service-worker behavior.
 
 Browser projects: Chromium mobile viewport and WebKit with the iPhone 13 device
 profile. Playwright WebKit on Linux is not a physical iPhone or Apple Safari binary.
-No test relies on real provider credentials or creates paid resources.
+No test relies on real credentials, Kaggle, Cloudflare or GPU inference.
 
-## Real GPU acceptance (requires owner authorization and credentials)
+## Kaggle T4 acceptance (free; requires the owner's Kaggle account)
 
-1. Build GPU image, verify its import checks and push an immutable digest.
-2. Create a supported network volume and Pod after reviewing current prices.
-3. Verify CUDA host driver, `torch.cuda.is_available()` and actual GPU count.
-4. Record first startup time, cached restart time, image digest and model revision.
-5. Upload a consented reference; generate a short Burmese script and long multi-chunk
-   script. Listen for pronunciation, timbre consistency, gaps, clipping and repetition.
-6. Check `file` and header parsing: 48 kHz, one channel, 24-bit PCM RIFF/WAVE.
-7. Close the browser during generation; reconnect and verify one completed job.
-8. Attempt safe stop while generating (must refuse); cancel or complete, then stop.
-9. Verify provider EXITED state and billing. Resume and confirm saved data/cache.
-10. After backup, replace the Pod in the same volume location; reattach during creation,
-    confirm cached weights, reference profiles, scripts, lexicon, history and outputs.
-11. Test network loss / provider timeout and verify no duplicate paid Pod is created.
-12. Check provider billing for compute, stopped storage and any transfer charges.
+1. Import `kaggle/thalika-kaggle.ipynb`, select GPU T4 x2 + Internet, attach secrets, Save & Run All.
+2. Confirm the log shows the contract check passing, `capability=(7, 5), dtype=float32,
+   compile=False`, and `Ready` in Settings. Record first startup time.
+3. Generate short and multi-chunk Burmese scripts; listen for quality and compare with an
+   Ampere GPU if available. Verify 48 kHz / mono / 24-bit PCM WAV.
+4. Close Safari during generation; reopen the link and verify one completed job.
+5. Let a short `MAX_HOURS` (e.g. `0.5`) expire during a generation: launcher must wait, stop,
+   and the version output must contain `thalika-data`. Attach it to a new run; confirm restore.
 
 ## Physical iPhone acceptance
 

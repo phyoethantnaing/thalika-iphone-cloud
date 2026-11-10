@@ -42,6 +42,9 @@ import torch
 
 from voxcpm import VoxCPM
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # sibling modules also load under runpy
+from output_files import output_dir, prune_legacy_outputs, prune_outputs  # noqa: E402
+
 # ponytail: torch auto-picks the device (CUDA if present, else CPU; MPS support depends on the
 # voxcpm build). Add a device knob here only if CPU is too slow and MPS isn't auto-selected.
 # VOXCPM_MODEL_DIR points at a pre-downloaded local copy (e.g. from ModelScope); else pull from HF.
@@ -53,9 +56,48 @@ if DEVICE not in {"auto", "cpu", "mps", "cuda"}:
 # (e.g. Apple MPS). Opt in with VOXCPM_LOAD_DENOISER=1 on hardware where it works; the per-request
 # `denoise` toggle is a safe no-op while it's off.
 LOAD_DENOISER = os.environ.get("VOXCPM_LOAD_DENOISER", "0") not in ("0", "false", "no")
+
+
+def cuda_capability():
+    try:
+        if DEVICE in ("auto", "cuda") and torch.cuda.is_available():
+            return torch.cuda.get_device_capability(0)
+    except Exception:  # noqa: BLE001 - capability probing must never block startup
+        return None
+    return None
+
+
+# Pre-Ampere CUDA GPUs (Kaggle/Colab T4 = sm_75) have no native bfloat16, and Triton's
+# torch.compile path rejects bf16 there. The checkpoint default stays untouched on sm_80+
+# (A100/L4 etc.). Override explicitly with VOXCPM_DTYPE / VOXCPM_OPTIMIZE.
+CAPABILITY = cuda_capability()
+LEGACY_CUDA = CAPABILITY is not None and CAPABILITY < (8, 0)
+DTYPE_OVERRIDE = os.environ.get("VOXCPM_DTYPE", "float32" if LEGACY_CUDA else "").strip().lower()
+if DTYPE_OVERRIDE and DTYPE_OVERRIDE not in {"float32", "float16", "bfloat16"}:
+    raise ValueError("VOXCPM_DTYPE must be float32, float16, or bfloat16.")
+OPTIMIZE = os.environ.get("VOXCPM_OPTIMIZE", "0" if LEGACY_CUDA else "1").strip().lower() not in ("0", "false", "no")
+if DTYPE_OVERRIDE:
+    import importlib
+
+    for module_name in ("voxcpm.model.voxcpm2", "voxcpm.model.voxcpm"):
+        try:
+            module = importlib.import_module(module_name)
+        except ImportError:
+            continue
+        original_pick = getattr(module, "pick_runtime_dtype", None)
+        if original_pick is None:
+            continue
+
+        def forced_dtype(device, configured_dtype, _original=original_pick):
+            if str(device).startswith("cuda"):
+                return DTYPE_OVERRIDE
+            return _original(device, configured_dtype)
+
+        module.pick_runtime_dtype = forced_dtype
 print(
     f"[thalika-local] loading VoxCPM2 from '{MODEL}' "
-    f"(device={DEVICE}, denoiser={LOAD_DENOISER}) ...",
+    f"(device={DEVICE}, capability={CAPABILITY}, dtype={DTYPE_OVERRIDE or 'checkpoint'}, "
+    f"compile={OPTIMIZE}, denoiser={LOAD_DENOISER}) ...",
     flush=True,
 )
 try:
@@ -63,6 +105,7 @@ try:
         MODEL,
         load_denoiser=LOAD_DENOISER,
         device=None if DEVICE == "auto" else DEVICE,
+        optimize=OPTIMIZE,
     )
     print(f"[thalika-local] model loaded on {model.tts_model.device}.", flush=True)
 except Exception as exc:  # noqa: BLE001 - surface a clear startup failure
@@ -87,6 +130,13 @@ except Exception as exc:  # noqa: BLE001 - warmup is best-effort
 # VoxCPM and the process-wide RNG are shared state. Serializing local inference prevents two
 # browser jobs from changing the seed or overwriting an output while another take is running.
 INFERENCE_LOCK = threading.Lock()
+
+# Takes are written to their own directory and pruned once Gradio has copied them into its cache.
+# At startup, clear whatever a previous run (or the old delete=False code) left behind.
+OUTPUT_DIR = output_dir()
+_swept = prune_outputs(OUTPUT_DIR, max_age_seconds=0) + prune_legacy_outputs()
+if _swept:
+    print(f"[thalika-local] removed {len(_swept)} leftover take file(s) from earlier runs.", flush=True)
 
 
 def seed_inference(seed):
@@ -179,10 +229,15 @@ def generate(
 
     # A unique file avoids cross-job collisions in Gradio's output cache. The Next.js pipeline
     # immediately downloads and converts it to the 48kHz mono 24-bit PCM master format.
-    output = tempfile.NamedTemporaryFile(prefix="thalika-output-", suffix=".wav", delete=False)
+    prune_outputs(OUTPUT_DIR)
+    output = tempfile.NamedTemporaryFile(prefix="take-", suffix=".wav", dir=OUTPUT_DIR, delete=False)
     out_path = output.name
     output.close()
-    sf.write(out_path, np.asarray(wav, dtype=np.float32), model.tts_model.sample_rate, subtype="PCM_16")
+    # 24-bit, not 16: the model renders float32, and the app masters to 24-bit with up to ~+15 dB of
+    # gain. Writing 16-bit threw that precision away first, so the 24-bit master only ever held 16
+    # bits of detail in a 1.5x larger file. (Audibly tiny - the 16-bit floor sits near -90 dBFS after
+    # typical gain - but it cost nothing to keep.)
+    sf.write(out_path, np.asarray(wav, dtype=np.float32), model.tts_model.sample_rate, subtype="PCM_24")
     return out_path
 
 

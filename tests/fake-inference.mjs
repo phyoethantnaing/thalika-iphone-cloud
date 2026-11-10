@@ -1,4 +1,4 @@
-// Explicit test double: never included in the production Docker image.
+// Explicit test double: never used by the Kaggle launcher or real inference.
 import http from 'node:http';
 import { Buffer } from 'node:buffer';
 export function fixtureWav(seconds = 8) {
