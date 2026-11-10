@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Power, RefreshCw, ExternalLink, Clock3 } from "lucide-react";
 type Status = {
-  mode: "studio" | "control"; stage?: string; modelReady?: boolean; gpu?: string | null; vramGb?: number | null;
+  mode: "studio" | "control"; host?: "kaggle" | "runpod"; dashboardUrl?: string; sessionEndsAt?: string | null; stage?: string; modelReady?: boolean; gpu?: string | null; vramGb?: number | null;
   activeJobs?: { id: string }[] | null; runningSeconds?: number | null; hourlyRate?: number | null; estimatedPodCost?: number | null;
   networkVolumeId?: string | null; storageGb?: number | null; studioUrl?: string | null; controlUrl?: string | null;
   lastSuccessfulSession?: string | null; lastError?: string | null; startupLatencyMs?: number | null; error?: string;
@@ -25,7 +25,10 @@ export function CloudDashboard() {
   }
   const minutes = status?.runningSeconds == null ? "Unknown" : `${Math.floor(status.runningSeconds / 3600)}h ${Math.floor(status.runningSeconds % 3600 / 60)}m ${Math.floor(status.runningSeconds % 60)}s`;
   return <section className="studio-card-bg panel"><p className="eyebrow">ON-DEMAND GPU</p><div className="cloud-state" role="status"><span className={`state-light ${status?.modelReady ? "ready" : ""}`} />{status?.stage || (status?.mode === "studio" ? "GPU control" : "Checking provider…")}</div>
-    {status?.mode === "studio" ? <><p>GPU ပိတ်ထားချိန်တွင် သီးခြား control plane သို့မဟုတ် Runpod dashboard မှ ပြန်စတင်ပါ။</p>{status.controlUrl && <a className="primary" href={status.controlUrl}>Open GPU control <ExternalLink size={17}/></a>}<Link className="secondary" href="/">Open Studio</Link></> : <>
+    {status?.mode === "studio" && status.host === "kaggle" ? <><p>Kaggle GPU session ပေါ်တွင် run နေသည်။ Session ပြီးချိန်မတိုင်မီ WAV များကို download လုပ်ပါ။ နောက်တစ်ကြိမ်အတွက် Kaggle notebook ကို ပြန် Run ပါ။</p>
+      {status.sessionEndsAt && <p className="eyebrow" data-testid="kaggle-deadline"><Clock3 size={15}/> Session ends {new Date(status.sessionEndsAt).toLocaleString()}</p>}
+      <a className="primary" href={status.dashboardUrl} target="_blank" rel="noreferrer">Kaggle notebooks <ExternalLink size={17}/></a><Link className="secondary" href="/">Open Studio</Link></>
+    : status?.mode === "studio" ? <><p>GPU ပိတ်ထားချိန်တွင် သီးခြား control plane သို့မဟုတ် Runpod dashboard မှ ပြန်စတင်ပါ။</p>{status.controlUrl && <a className="primary" href={status.controlUrl}>Open GPU control <ExternalLink size={17}/></a>}<Link className="secondary" href="/">Open Studio</Link></> : <>
     <dl className="metric-grid">{[
       ["Provider", "Runpod"], ["GPU / VRAM", `${status?.gpu || "Not allocated"} · ${status?.vramGb == null ? "VRAM unreported" : `${status.vramGb} GB`}`],
       ["Session time", minutes], ["Provider Pod rate", status?.hourlyRate == null ? "Unavailable" : `$${status.hourlyRate.toFixed(3)}/h`],
@@ -43,6 +46,6 @@ export function CloudDashboard() {
     <p className="text-xs leading-6 text-slate-600">Rate comes from the provider&apos;s Pod record. The estimate excludes separately billed persistent storage, transfer, gateway, control service, and Gemini. Provider billing is authoritative. Storage continues to cost money after compute stops.</p></>}
     <button className="secondary" onClick={() => void refresh()} disabled={busy}><RefreshCw size={17}/> Refresh / retry connection</button>
     {message && <p role="status">{message}</p>}{error && <p role="alert" className="notice">{error}</p>}
-    <a href="https://console.runpod.io/pods" target="_blank" rel="noreferrer" className="secondary">Runpod dashboard <ExternalLink size={17}/></a>
+    {status?.host !== "kaggle" && <a href="https://console.runpod.io/pods" target="_blank" rel="noreferrer" className="secondary">Runpod dashboard <ExternalLink size={17}/></a>}
   </section>;
 }

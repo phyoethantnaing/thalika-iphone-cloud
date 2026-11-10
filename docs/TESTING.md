@@ -35,6 +35,15 @@ No test relies on real provider credentials or creates paid resources.
 11. Test network loss / provider timeout and verify no duplicate paid Pod is created.
 12. Check provider billing for compute, stopped storage and any transfer charges.
 
+## Kaggle T4 acceptance (free; requires the owner's Kaggle account)
+
+1. Import `kaggle/thalika-kaggle.ipynb`, select GPU T4 x2 + Internet, attach secrets, Save & Run All.
+2. Confirm the log shows `capability=(7, 5), dtype=float32, compile=False` and `Ready` in Settings.
+3. Generate short and multi-chunk Burmese scripts; listen for quality and compare with an
+   Ampere GPU if available. Verify 48 kHz / mono / 24-bit PCM WAV.
+4. Let a short `MAX_HOURS` (e.g. `0.5`) expire during a generation: launcher must wait, stop,
+   and the version output must contain `thalika-data`. Attach it to a new run; confirm restore.
+
 ## Physical iPhone acceptance
 
 Test current iOS Safari in portrait/landscape and from Home Screen. Check Dynamic

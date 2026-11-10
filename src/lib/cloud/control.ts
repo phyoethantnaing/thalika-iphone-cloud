@@ -30,8 +30,20 @@ async function runtimeCall(pod: Pod, action?: "reserve-stop" | "release"): Promi
   if (!response.ok) throw new Error(action ? "GPU refused safe stop: jobs may be active. Open Studio and check History." : "GPU application is not reachable yet");
   return response.json();
 }
+/** The Studio itself only reports where its GPU host is managed; it never holds provider keys. */
+export function studioHostStatus() {
+  const kaggle = process.env.THALIKA_GPU_HOST === "kaggle";
+  const deadline = process.env.THALIKA_SESSION_DEADLINE;
+  return {
+    mode: "studio" as const,
+    host: kaggle ? "kaggle" as const : "runpod" as const,
+    controlUrl: process.env.CONTROL_PLANE_URL || null,
+    dashboardUrl: kaggle ? "https://www.kaggle.com/code" : "https://console.runpod.io/pods",
+    sessionEndsAt: kaggle && deadline && !Number.isNaN(Date.parse(deadline)) ? new Date(deadline).toISOString() : null,
+  };
+}
 export async function getControlStatus() {
-  if (process.env.THALIKA_ROLE !== "control") return { mode: "studio" as const, controlUrl: process.env.CONTROL_PLANE_URL || null, dashboardUrl: "https://console.runpod.io/pods" };
+  if (process.env.THALIKA_ROLE !== "control") return studioHostStatus();
   const state = await readJson(statePath, initial());
   const provider = new RunpodProvider();
   let pod: Pod | undefined;

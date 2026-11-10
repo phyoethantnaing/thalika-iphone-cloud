@@ -6,7 +6,14 @@
 
 **လက်ရှိအခြေအနေ:** source code၊ owner authentication၊ iPhone/PWA interface၊ persistent jobs၊ Docker targets နှင့် Runpod lifecycle adapter တို့ ပါဝင်သည်။ စမ်းသပ်ရလဒ်နှင့် မပြီးသေးသော real-GPU / physical-iPhone checks ကို [TESTING.md](docs/TESTING.md) တွင် ဖော်ပြထားသည်။ Cloud deployment၊ GPU ငှားရမ်းခြင်းနှင့် image publication ကို အလိုအလျောက် မလုပ်ထားပါ။
 
-## အသုံးပြုပုံ
+## Kaggle GPU (အခမဲ့) ဖြင့် အလွယ်ဆုံးနည်း
+
+Runpod မလိုဘဲ Kaggle notebook ၏ T4 GPU ပေါ်တွင် run နိုင်သည်။ [`kaggle/thalika-kaggle.ipynb`](kaggle/thalika-kaggle.ipynb)
+ကို Kaggle သို့ import လုပ်၊ **GPU T4 x2** နှင့် **Internet On** ရွေး၊ `THALIKA_OWNER_PASSWORD` secret ထည့်ပြီး
+**Save & Run All** နှိပ်ရုံသာ။ Log ထဲတွင်ပေါ်လာသော `https://….trycloudflare.com` link ကို iPhone Safari ဖြင့်ဖွင့်ပါ။
+အသေးစိတ်: [Kaggle လမ်းညွှန်](docs/KAGGLE.my.md)။ အောက်ပါ Runpod အဆင့်များသည် Kaggle သုံးလျှင် မလိုပါ။
+
+## အသုံးပြုပုံ (Runpod)
 
 1. iPhone Safari ဖြင့် သင့် **control service** URL ကိုဖွင့်ပြီး owner password ဖြင့်ဝင်ပါ။ Control service မတပ်ဆင်ထားပါက [Runpod dashboard](https://console.runpod.io/pods) ကိုသုံးပါ။
 2. လက်ရှိ GPU စျေးနှုန်းကို Runpod တွင်စစ်ပြီး **Start GPU** နှိပ်ပါ။ GPU စျေးနှုန်းနှင့် ရရှိနိုင်မှုကို app က ကြိုတင်အာမမခံပါ။

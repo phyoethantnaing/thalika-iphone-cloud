@@ -113,5 +113,12 @@ Compared with upstream `cf00a0c8eb269efb1796c26f152372325465eba6`.
 | A | `tests/provider.test.ts` |
 | A | `tests/python-contract.py` |
 | A | `tests/security.test.ts` |
+| A | `docs/KAGGLE.my.md` |
+| A | `kaggle/kernel-metadata.example.json` |
+| A | `kaggle/thalika-kaggle.ipynb` |
+| A | `scripts/kaggle-start.py` |
+| A | `local-server/output_files.py` (upstream `dc7585a`) |
+| A | `local-server/test_output_files.py` (upstream `dc7585a`) |
+| A | `tests/kaggle.test.ts` |
 
 `docs/DELIVERY.md` records validation; `git log` identifies the final delivery commit.

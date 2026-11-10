@@ -13,6 +13,17 @@ flowchart LR
   W --> D[Private persistent profiles / scripts / WAV / job Markdown]
 ```
 
+## Kaggle host
+
+`scripts/kaggle-start.py` runs the same Studio role on a Kaggle T4 notebook without any
+provider API key. It installs pinned, checksum-verified Node and cloudflared, a Python 3.11
+venv from `local-server/requirements.lock`, builds the standalone app, then runs the same
+`scripts/container-start.py` supervisor. Only Node (127.0.0.1:3000) is tunnelled; Gradio
+stays on loopback. User data lives in `/kaggle/working/thalika-data` (notebook output) and is
+restored from the newest attached previous output. The launcher reserves a safe stop before
+Kaggle's 12-hour limit. Pre-Ampere CUDA (sm < 8.0) loads float32 without `torch.compile`;
+newer GPUs keep the checkpoint dtype. See `docs/KAGGLE.my.md`.
+
 ## Independent lifetimes
 
 The control target is an independent lightweight CPU image, on an existing

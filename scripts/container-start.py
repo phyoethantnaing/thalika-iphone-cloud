@@ -48,8 +48,11 @@ signal.signal(signal.SIGTERM, shutdown)
 signal.signal(signal.SIGINT, shutdown)
 if role == "studio":
     # No shell launcher / pip here. All dependencies are in /opt/venv in the image.
-    children.append(subprocess.Popen(["/opt/venv/bin/python", "local-server/server.py"], start_new_session=True))
-children.append(subprocess.Popen(["node", "server.js"], start_new_session=True))
+    # Non-container hosts (Kaggle) point these at their prepared venv and source checkout.
+    python = os.environ.get("THALIKA_PYTHON", "/opt/venv/bin/python")
+    model_server = os.environ.get("THALIKA_MODEL_SERVER", "local-server/server.py")
+    children.append(subprocess.Popen([python, model_server], start_new_session=True))
+children.append(subprocess.Popen([os.environ.get("THALIKA_NODE", "node"), "server.js"], cwd=os.environ.get("THALIKA_WEB_DIR") or None, start_new_session=True))
 exit_code = 0
 while not stop:
     for child in children:

@@ -56,9 +56,48 @@ if DEVICE not in {"auto", "cpu", "mps", "cuda"}:
 # (e.g. Apple MPS). Opt in with VOXCPM_LOAD_DENOISER=1 on hardware where it works; the per-request
 # `denoise` toggle is a safe no-op while it's off.
 LOAD_DENOISER = os.environ.get("VOXCPM_LOAD_DENOISER", "0") not in ("0", "false", "no")
+
+
+def cuda_capability():
+    try:
+        if DEVICE in ("auto", "cuda") and torch.cuda.is_available():
+            return torch.cuda.get_device_capability(0)
+    except Exception:  # noqa: BLE001 - capability probing must never block startup
+        return None
+    return None
+
+
+# Pre-Ampere CUDA GPUs (Kaggle/Colab T4 = sm_75) have no native bfloat16, and Triton's
+# torch.compile path rejects bf16 there. The checkpoint default stays untouched on sm_80+
+# (Runpod). Override explicitly with VOXCPM_DTYPE / VOXCPM_OPTIMIZE.
+CAPABILITY = cuda_capability()
+LEGACY_CUDA = CAPABILITY is not None and CAPABILITY < (8, 0)
+DTYPE_OVERRIDE = os.environ.get("VOXCPM_DTYPE", "float32" if LEGACY_CUDA else "").strip().lower()
+if DTYPE_OVERRIDE and DTYPE_OVERRIDE not in {"float32", "float16", "bfloat16"}:
+    raise ValueError("VOXCPM_DTYPE must be float32, float16, or bfloat16.")
+OPTIMIZE = os.environ.get("VOXCPM_OPTIMIZE", "0" if LEGACY_CUDA else "1").strip().lower() not in ("0", "false", "no")
+if DTYPE_OVERRIDE:
+    import importlib
+
+    for module_name in ("voxcpm.model.voxcpm2", "voxcpm.model.voxcpm"):
+        try:
+            module = importlib.import_module(module_name)
+        except ImportError:
+            continue
+        original_pick = getattr(module, "pick_runtime_dtype", None)
+        if original_pick is None:
+            continue
+
+        def forced_dtype(device, configured_dtype, _original=original_pick):
+            if str(device).startswith("cuda"):
+                return DTYPE_OVERRIDE
+            return _original(device, configured_dtype)
+
+        module.pick_runtime_dtype = forced_dtype
 print(
     f"[thalika-local] loading VoxCPM2 from '{MODEL}' "
-    f"(device={DEVICE}, denoiser={LOAD_DENOISER}) ...",
+    f"(device={DEVICE}, capability={CAPABILITY}, dtype={DTYPE_OVERRIDE or 'checkpoint'}, "
+    f"compile={OPTIMIZE}, denoiser={LOAD_DENOISER}) ...",
     flush=True,
 )
 try:
@@ -66,6 +105,7 @@ try:
         MODEL,
         load_denoiser=LOAD_DENOISER,
         device=None if DEVICE == "auto" else DEVICE,
+        optimize=OPTIMIZE,
     )
     print(f"[thalika-local] model loaded on {model.tts_model.device}.", flush=True)
 except Exception as exc:  # noqa: BLE001 - surface a clear startup failure

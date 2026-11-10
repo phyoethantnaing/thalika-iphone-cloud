@@ -18,4 +18,5 @@ hosting. This supersedes the original local-only prohibitions, retained in
 - Do not push upstream. Verify the owner's destination and remote commit SHA.
 - Check `npm run lint`, `npm test`, `npm run build`, and `npm run test:e2e`.
   Browser tests use an explicit test double, not real voice inference.
+- Kaggle host: `scripts/kaggle-start.py` + `kaggle/`; see `docs/KAGGLE.my.md`.
 - Read `docs/TESTING.md` for remaining real-device/GPU release checks.
